@@ -21,7 +21,7 @@ func main() {
 	tools.RegisterYouTubeTool(mcpServer)
 	tools.RegisterJiraTool(mcpServer)
 	tools.RegisterGitLabTool(mcpServer)
-	tools.RegisterCommandLineExpertTool(mcpServer)
+	tools.RegisterExpertTool(mcpServer)
 
 	// Start the stdio server
 	if err := server.ServeStdio(mcpServer); err != nil {
