@@ -46,11 +46,8 @@ func youtubeTranscriptHandler(arguments map[string]interface{}) (*mcp.CallToolRe
 		lang = "en"
 	}
 
-	// Create YouTube transcript instance
-	yt := &YoutubeTranscript{}
-
 	// Fetch transcript
-	transcripts, videoTitle, err := yt.FetchTranscript(videoURL, &TranscriptConfig{Lang: lang})
+	transcripts, videoTitle, err := FetchTranscript(videoURL, &TranscriptConfig{Lang: lang})
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch transcript: %v", err)
 	}
@@ -82,32 +79,6 @@ func (e *YoutubeTranscriptError) Error() string {
 	return fmt.Sprintf("[YoutubeTranscript] 🚨 %s", e.Message)
 }
 
-type YoutubeTranscriptTooManyRequestError struct {
-	YoutubeTranscriptError
-}
-
-type YoutubeTranscriptVideoUnavailableError struct {
-	YoutubeTranscriptError
-	VideoID string
-}
-
-type YoutubeTranscriptDisabledError struct {
-	YoutubeTranscriptError
-	VideoID string
-}
-
-type YoutubeTranscriptNotAvailableError struct {
-	YoutubeTranscriptError
-	VideoID string
-}
-
-type YoutubeTranscriptNotAvailableLanguageError struct {
-	YoutubeTranscriptError
-	Lang           string
-	AvailableLangs []string
-	VideoID        string
-}
-
 // Types for transcript handling
 type TranscriptConfig struct {
 	Lang string
@@ -120,10 +91,8 @@ type TranscriptResponse struct {
 	Lang     string
 }
 
-type YoutubeTranscript struct{}
-
 // FetchTranscript retrieves the transcript for a YouTube video
-func (yt *YoutubeTranscript) FetchTranscript(videoId string, config *TranscriptConfig) ([]TranscriptResponse, string, error) {
+func FetchTranscript(videoId string, config *TranscriptConfig) ([]TranscriptResponse, string, error) {
 	identifier, err := retrieveVideoId(videoId)
 	if err != nil {
 		return nil, "", err
@@ -153,12 +122,12 @@ func (yt *YoutubeTranscript) FetchTranscript(videoId string, config *TranscriptC
 	splittedHTML := strings.Split(string(videoPageBody), `"captions":`)
 	if len(splittedHTML) <= 1 {
 		if strings.Contains(string(videoPageBody), `class="g-recaptcha"`) {
-			return nil, "", &YoutubeTranscriptTooManyRequestError{YoutubeTranscriptError{Message: "YouTube is receiving too many requests from this IP and now requires solving a captcha to continue"}}
+			return nil, "", &YoutubeTranscriptError{Message: "YouTube is receiving too many requests from this IP and now requires solving a captcha to continue"}
 		}
 		if !strings.Contains(string(videoPageBody), `"playabilityStatus":`) {
-			return nil, "", &YoutubeTranscriptVideoUnavailableError{YoutubeTranscriptError{Message: fmt.Sprintf("The video is no longer available (%s)", videoId)}, videoId}
+			return nil, "", &YoutubeTranscriptError{Message: fmt.Sprintf("The video is no longer available (%s)", videoId)}
 		}
-		return nil, "", &YoutubeTranscriptDisabledError{YoutubeTranscriptError{Message: fmt.Sprintf("Transcript is disabled on this video (%s)", videoId)}, videoId}
+		return nil, "", &YoutubeTranscriptError{Message: fmt.Sprintf("Transcript is disabled on this video (%s)", videoId)}
 	}
 
 	var captions struct {
@@ -173,11 +142,11 @@ func (yt *YoutubeTranscript) FetchTranscript(videoId string, config *TranscriptC
 	captionsData := splittedHTML[1][:strings.Index(splittedHTML[1], ",\"videoDetails")]
 	err = json.Unmarshal([]byte(captionsData), &captions)
 	if err != nil {
-		return nil, "", &YoutubeTranscriptDisabledError{YoutubeTranscriptError{Message: fmt.Sprintf("Transcript is disabled on this video (%s)", videoId)}, videoId}
+		return nil, "", &YoutubeTranscriptError{Message: fmt.Sprintf("Transcript is disabled on this video (%s)", videoId)}
 	}
 
 	if len(captions.PlayerCaptionsTracklistRenderer.CaptionTracks) == 0 {
-		return nil, "", &YoutubeTranscriptNotAvailableError{YoutubeTranscriptError{Message: fmt.Sprintf("No transcripts are available for this video (%s)", videoId)}, videoId}
+		return nil, "", &YoutubeTranscriptError{Message: fmt.Sprintf("No transcripts are available for this video (%s)", videoId)}
 	}
 
 	var transcriptURL string
@@ -193,11 +162,8 @@ func (yt *YoutubeTranscript) FetchTranscript(videoId string, config *TranscriptC
 			for i, track := range captions.PlayerCaptionsTracklistRenderer.CaptionTracks {
 				availableLangs[i] = track.LanguageCode
 			}
-			return nil, "", &YoutubeTranscriptNotAvailableLanguageError{
-				YoutubeTranscriptError{Message: fmt.Sprintf("No transcripts are available in %s for this video (%s). Available languages: %s", config.Lang, videoId, strings.Join(availableLangs, ", "))},
-				config.Lang,
-				availableLangs,
-				videoId,
+			return nil, "", &YoutubeTranscriptError{
+				Message: fmt.Sprintf("No transcripts are available in %s for this video (%s). Available languages: %s", config.Lang, videoId, strings.Join(availableLangs, ", ")),
 			}
 		}
 	} else {
@@ -206,7 +172,7 @@ func (yt *YoutubeTranscript) FetchTranscript(videoId string, config *TranscriptC
 
 	transcriptResponse, err := http.Get(transcriptURL)
 	if err != nil {
-		return nil, "", &YoutubeTranscriptNotAvailableError{YoutubeTranscriptError{Message: fmt.Sprintf("No transcripts are available for this video (%s)", videoId)}, videoId}
+		return nil, "", &YoutubeTranscriptError{Message: fmt.Sprintf("No transcripts are available for this video (%s)", videoId)}
 	}
 	defer transcriptResponse.Body.Close()
 
