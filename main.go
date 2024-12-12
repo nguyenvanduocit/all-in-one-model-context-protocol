@@ -12,7 +12,6 @@ func main() {
 	mcpServer := server.NewMCPServer(
 		"MyMCP",
 		"1.0.0",
-		server.WithToolCapabilities(true),
 		server.WithLogging(),
 	)
 
