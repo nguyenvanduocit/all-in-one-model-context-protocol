@@ -23,14 +23,14 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
       "command": "all-in-one-model-context-protocol",
       "args": [],
       "env": {
-        "GITLAB_TOKEN": "",
-        "GITLAB_HOST": "",
-        "BRAVE_API_KEY": "",
-        "ATLASSIAN_HOST": "",
         "ATLASSIAN_EMAIL": "",
         "ATLASSIAN_TOKEN": "",
         "PROXY_URL": "",
-        "GOOGLE_AI_API_KEY": ""
+        "GOOGLE_AI_API_KEY": "",
+        "GITLAB_TOKEN": "",
+        "GITLAB_HOST": "",
+        "BRAVE_API_KEY": "",
+        "ATLASSIAN_HOST": ""
       }
     }
   }
@@ -41,7 +41,7 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
 
 ### execute_comand_line_script
 
-Execute a script file on user machine
+Execute a script file on user machine. Non interactive. Do not do unsafe operations
 
 Arguments:
 
@@ -82,13 +82,14 @@ Arguments:
 - `question` (String) (Required): The question to ask. Should be a question
 - `context` (String) (Required): Context/purpose of the question, helps Gemini to understand the question better
 
-### gitlab_search_projects
+### gitlab_list_projects
 
-Search GitLab projects
+List GitLab projects
 
 Arguments:
 
-- `query` (String) (Required): Search query
+- `group_id` (String) (Required): gitlab group ID
+- `search` (String): Multiple terms can be provided, separated by an escaped space, either + or %20, and will be ANDed together. Example: one+two will match substrings one and two (in any order).
 
 ### gitlab_get_project
 
@@ -125,15 +126,6 @@ Arguments:
 - `project_id` (String) (Required): Project ID or path
 - `mr_iid` (String) (Required): Merge request IID
 - `comment` (String) (Required): Comment text
-
-### gitlab_list_mr_changes
-
-Get detailed changes of a merge request
-
-Arguments:
-
-- `project_id` (String) (Required): Project ID or path
-- `mr_iid` (String) (Required): Merge request IID
 
 ### gitlab_get_file_content
 
@@ -173,6 +165,24 @@ Arguments:
 
 - `project_id` (String) (Required): Project ID or path
 - `commit_sha` (String) (Required): Commit SHA
+
+### gitlab_list_user_events
+
+List GitLab user events within a date range
+
+Arguments:
+
+- `username` (String) (Required): GitLab username
+- `since` (String) (Required): Start date (YYYY-MM-DD)
+- `until` (String) (Required): End date (YYYY-MM-DD)
+
+### gitlab_list_group_users
+
+List all users in a GitLab group
+
+Arguments:
+
+- `group_id` (String) (Required): GitLab group ID
 
 ### get_jira_issue
 

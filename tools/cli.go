@@ -22,8 +22,8 @@ func RegisterScriptTool(s *server.MCPServer) {
 	}
 
 	tool := mcp.NewTool("execute_comand_line_script",
-		mcp.WithDescription("Execute a script file on user machine"),
-		mcp.WithString("content", mcp.Required(), mcp.Description("Script content to execute. Note: Current user OS is " + runtime.GOOS)),
+		mcp.WithDescription("Execute a script file on user machine. Non interactive. Do not do unsafe operations"),
+		mcp.WithString("content", mcp.Required(), mcp.Description("Script content to execute. Note: Current user OS is " + runtime.GOOS + " and current user is " + currentUser.Username)),
 		mcp.WithString("interpreter", mcp.DefaultString("/bin/sh"), mcp.Description("Script interpreter (e.g., /bin/sh, /bin/bash, python, etc.)")),
 		mcp.WithString("working_dir", mcp.DefaultString(currentUser.HomeDir), mcp.Description("Working directory for script execution")),
 	)
