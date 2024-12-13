@@ -7,11 +7,13 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/util"
 	"github.com/pkg/errors"
-	"gitlab.com/gitlab-org/api/client-go"
+	gitlab "gitlab.com/gitlab-org/api/client-go"
 )
 
 var gitlabClient = sync.OnceValue[*gitlab.Client](func() *gitlab.Client {
@@ -48,7 +50,7 @@ func RegisterGitLabTool(s *server.MCPServer) {
 	mrListTool := mcp.NewTool("gitlab_list_mrs",
 		mcp.WithDescription("List merge requests"),
 		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
-		mcp.WithString("state", mcp.DefaultString("opened"), mcp.Description("MR state (opened/closed/merged)")),
+		mcp.WithString("state", mcp.DefaultString("all"), mcp.Description("MR state (opened/closed/merged)")),
 	)
 
 	mrDetailsTool := mcp.NewTool("gitlab_get_mr_details",
@@ -74,7 +76,7 @@ func RegisterGitLabTool(s *server.MCPServer) {
 		mcp.WithDescription("Get file content from a GitLab repository"),
 		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
 		mcp.WithString("file_path", mcp.Required(), mcp.Description("Path to the file in the repository")),
-		mcp.WithString("ref", mcp.Required(), mcp.Description("Branch name, tag, or commit SHA")),
+		mcp.WithString("ref", mcp.DefaultString("develop"), mcp.Description("Branch name, tag, or commit SHA")),
 	)
 
 	pipelineTool := mcp.NewTool("gitlab_list_pipelines",
@@ -83,14 +85,30 @@ func RegisterGitLabTool(s *server.MCPServer) {
 		mcp.WithString("status", mcp.DefaultString("all"), mcp.Description("Pipeline status (running/pending/success/failed/canceled/skipped/all)")),
 	)
 
-	s.AddTool(searchTool, searchProjectsHandler)
-	s.AddTool(projectTool, getProjectHandler)
-	s.AddTool(mrListTool, listMergeRequestsHandler)
-	s.AddTool(mrDetailsTool, getMergeRequestHandler)
-	s.AddTool(mrCommentTool, commentOnMergeRequestHandler)
-	s.AddTool(mrChangesTool, getMergeRequestChangesHandler)
-	s.AddTool(fileContentTool, getFileContentHandler)
-	s.AddTool(pipelineTool, listPipelinesHandler)
+	commitsTool := mcp.NewTool("gitlab_list_commits",
+		mcp.WithDescription("List commits in a GitLab project within a date range"),
+		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("since", mcp.Required(), mcp.Description("Start date (YYYY-MM-DD)")),
+		mcp.WithString("until", mcp.Required(), mcp.Description("End date (YYYY-MM-DD)")),
+		mcp.WithString("ref", mcp.DefaultString("develop"), mcp.Description("Branch name, tag, or commit SHA")),
+	)
+
+	commitDetailsTool := mcp.NewTool("gitlab_get_commit_details",
+		mcp.WithDescription("Get details of a commit"),
+		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("commit_sha", mcp.Required(), mcp.Description("Commit SHA")),
+	)
+
+	s.AddTool(searchTool, util.ErrorGuard(searchProjectsHandler))
+	s.AddTool(projectTool, util.ErrorGuard(getProjectHandler))
+	s.AddTool(mrListTool, util.ErrorGuard(listMergeRequestsHandler))
+	s.AddTool(mrDetailsTool, util.ErrorGuard(getMergeRequestHandler))
+	s.AddTool(mrCommentTool, util.ErrorGuard(commentOnMergeRequestHandler))
+	s.AddTool(mrChangesTool, util.ErrorGuard(getMergeRequestChangesHandler))
+	s.AddTool(fileContentTool, util.ErrorGuard(getFileContentHandler))
+	s.AddTool(pipelineTool, util.ErrorGuard(listPipelinesHandler))
+	s.AddTool(commitsTool, util.ErrorGuard(listCommitsHandler))
+	s.AddTool(commitDetailsTool, util.ErrorGuard(getCommitDetailsHandler))
 }
 
 func searchProjectsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
@@ -157,7 +175,11 @@ func getProjectHandler(arguments map[string]interface{}) (*mcp.CallToolResult, e
 
 func listMergeRequestsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
 	projectID := arguments["project_id"].(string)
-	state := arguments["state"].(string)
+	
+	state := "all"
+	if value, ok := arguments["state"]; ok {
+		state = value.(string)
+	}
 
 	opt := &gitlab.ListProjectMergeRequestsOptions{
 		State: gitlab.String(state),
@@ -318,7 +340,11 @@ func getChangeStatus(change *gitlab.MergeRequestDiff) string {
 func getFileContentHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
 	projectID := arguments["project_id"].(string)
 	filePath := arguments["file_path"].(string)
-	ref := arguments["ref"].(string)
+
+	ref := "develop"
+	if value, ok := arguments["ref"]; ok {
+		ref = value.(string)
+	}
 
 	// Get raw file content
 	fileContent, _, err := gitlabClient().RepositoryFiles.GetRawFile(projectID, filePath, &gitlab.GetRawFileOptions{
@@ -366,4 +392,123 @@ func listPipelinesHandler(arguments map[string]interface{}) (*mcp.CallToolResult
 	}
 
 	return mcp.NewToolResultText(result.String()), nil
+}
+
+func listCommitsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	projectID := arguments["project_id"].(string)
+	since, ok := arguments["since"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing required argument: since")
+	}
+
+	until, ok := arguments["until"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing required argument: until")
+	}
+
+	ref := "develop"
+	if value, ok := arguments["ref"]; ok {
+		ref = value.(string)
+	}
+
+	sinceTime, err := time.Parse("2006-01-02", since)
+	if err != nil {
+		return nil, fmt.Errorf("invalid since date: %v", err)
+	}
+
+	untilTime, err := time.Parse("2006-01-02 15:04:05", until+" 23:00:00")
+	if err != nil {
+		return nil, fmt.Errorf("invalid until date: %v", err)
+	}
+
+	opt := &gitlab.ListCommitsOptions{
+		Since: gitlab.Ptr(sinceTime),
+		Until: gitlab.Ptr(untilTime),
+		RefName: gitlab.Ptr(ref),
+	}
+
+	commits, _, err := gitlabClient().Commits.ListCommits(projectID, opt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list commits: %v", err)
+	}
+
+	var result strings.Builder
+	result.WriteString(fmt.Sprintf("Commits for project %s between %s and %s (ref: %s):\n\n", 
+		projectID, since, until, ref))
+
+	for _, commit := range commits {
+		result.WriteString(fmt.Sprintf("Commit: %s\n", commit.ID))
+		result.WriteString(fmt.Sprintf("Author: %s\n", commit.AuthorName))
+		result.WriteString(fmt.Sprintf("Date: %s\n", commit.CommittedDate.Format("2006-01-02 15:04:05")))
+		result.WriteString(fmt.Sprintf("Message: %s\n", commit.Title))
+		if commit.LastPipeline != nil {
+			result.WriteString("Last Pipeline: \n")
+			result.WriteString(fmt.Sprintf("Status: %s\n", commit.LastPipeline.Status))
+			result.WriteString(fmt.Sprintf("Ref: %s\n", commit.LastPipeline.Ref))
+			result.WriteString(fmt.Sprintf("SHA: %s\n", commit.LastPipeline.SHA))
+			result.WriteString(fmt.Sprintf("Created: %s\n", commit.LastPipeline.CreatedAt.Format("2006-01-02 15:04:05")))
+
+		}
+	}
+
+	return mcp.NewToolResultText(result.String()), nil
+}
+
+
+func getCommitDetailsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	projectID := arguments["project_id"].(string)
+	commitSHA := arguments["commit_sha"].(string)
+
+	commit, _, err := gitlabClient().Commits.GetCommit(projectID, commitSHA, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get commit details: %v", err)
+	}
+
+	diffs, _, err := gitlabClient().Commits.GetCommitDiff(projectID, commitSHA, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get commit diffs: %v", err)
+	}
+
+	var result strings.Builder
+	result.WriteString(fmt.Sprintf("Commit: %s\n", commit.ShortID))
+	result.WriteString(fmt.Sprintf("Author: %s\n", commit.AuthorName))
+	result.WriteString(fmt.Sprintf("Date: %s\n", commit.CommittedDate.Format("2006-01-02 15:04:05")))
+	result.WriteString(fmt.Sprintf("Message: %s\n", commit.Title))
+	result.WriteString(fmt.Sprintf("URL: %s\n\n", commit.WebURL))
+
+	if commit.ParentIDs != nil {
+		result.WriteString("Parents:\n")
+		for _, parentID := range commit.ParentIDs {
+			result.WriteString(fmt.Sprintf("- %s\n", parentID))
+		}
+		result.WriteString("\n")
+	}
+
+	result.WriteString("Diffs:\n")
+	for _, diff := range diffs {
+		result.WriteString(fmt.Sprintf("File: %s\n", diff.NewPath))
+		result.WriteString(fmt.Sprintf("Status: %s\n", getDiffStatus(diff)))
+
+		if diff.Diff != "" {
+			result.WriteString("```diff\n")
+			result.WriteString(diff.Diff)
+			result.WriteString("\n```\n")
+		}
+		result.WriteString("\n")
+	}
+
+	return mcp.NewToolResultText(result.String()), nil
+}
+
+func getDiffStatus(diff *gitlab.Diff) string {
+	if diff.NewFile {
+		return "Added"
+	}
+	if diff.DeletedFile {
+		return "Deleted"
+	}
+	if diff.RenamedFile {
+		return fmt.Sprintf("Renamed from %s", diff.OldPath)
+	}
+	return "Modified"
 }

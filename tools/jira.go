@@ -7,7 +7,8 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"github.com/nguyenvanduocit/mymcpserver/services"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/services"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/util"
 )
 
 // RegisterJiraTool registers the Jira tools to the server
@@ -18,7 +19,7 @@ func RegisterJiraTool(s *server.MCPServer) {
 		mcp.WithString("issue_key", mcp.Required(), mcp.Description("Jira issue key (e.g., KP-2)")),
 	)
 
-	s.AddTool(jiraTool, jiraIssueHandler)
+	s.AddTool(jiraTool, util.ErrorGuard(jiraIssueHandler))
 }
 
 func jiraIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {

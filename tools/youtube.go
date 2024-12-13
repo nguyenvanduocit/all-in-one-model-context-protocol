@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html"
 	"io"
-	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -13,6 +12,8 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/services"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/util"
 )
 
 const (
@@ -30,7 +31,7 @@ func RegisterYouTubeTool(s *server.MCPServer) {
 		mcp.WithString("country", mcp.DefaultString("US"), mcp.Description("Country code (default: US)")),
 	)
 
-	s.AddTool(tool, youtubeTranscriptHandler)
+	s.AddTool(tool, util.ErrorGuard(youtubeTranscriptHandler))
 }
 
 func youtubeTranscriptHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
@@ -41,9 +42,9 @@ func youtubeTranscriptHandler(arguments map[string]interface{}) (*mcp.CallToolRe
 	}
 
 	// Get language from arguments (optional)
-	lang, _ := arguments["lang"].(string)
-	if lang == "" {
-		lang = "en"
+	lang := "en"
+	if value, ok := arguments["lang"]; ok {
+		lang = value.(string)
 	}
 
 	// Fetch transcript
@@ -91,6 +92,7 @@ type TranscriptResponse struct {
 	Lang     string
 }
 
+
 // FetchTranscript retrieves the transcript for a YouTube video
 func FetchTranscript(videoId string, config *TranscriptConfig) ([]TranscriptResponse, string, error) {
 	identifier, err := retrieveVideoId(videoId)
@@ -99,7 +101,8 @@ func FetchTranscript(videoId string, config *TranscriptConfig) ([]TranscriptResp
 	}
 
 	videoPageURL := fmt.Sprintf("https://www.youtube.com/watch?v=%s", identifier)
-	videoPageResponse, err := http.Get(videoPageURL)
+
+	videoPageResponse, err := services.DefaultHttpClient().Get(videoPageURL)
 	if err != nil {
 		return nil, "", err
 	}
@@ -151,26 +154,28 @@ func FetchTranscript(videoId string, config *TranscriptConfig) ([]TranscriptResp
 
 	var transcriptURL string
 	if config != nil && config.Lang != "" {
+		// Try to find the requested language
 		for _, track := range captions.PlayerCaptionsTracklistRenderer.CaptionTracks {
 			if track.LanguageCode == config.Lang {
 				transcriptURL = track.BaseURL
 				break
 			}
 		}
+		
+		// If requested language not found, fall back to first available language
 		if transcriptURL == "" {
-			availableLangs := make([]string, len(captions.PlayerCaptionsTracklistRenderer.CaptionTracks))
-			for i, track := range captions.PlayerCaptionsTracklistRenderer.CaptionTracks {
-				availableLangs[i] = track.LanguageCode
-			}
-			return nil, "", &YoutubeTranscriptError{
-				Message: fmt.Sprintf("No transcripts are available in %s for this video (%s). Available languages: %s", config.Lang, videoId, strings.Join(availableLangs, ", ")),
-			}
+			transcriptURL = captions.PlayerCaptionsTracklistRenderer.CaptionTracks[0].BaseURL
+			// Update the config language to match what we're actually using
+			config.Lang = captions.PlayerCaptionsTracklistRenderer.CaptionTracks[0].LanguageCode
 		}
 	} else {
 		transcriptURL = captions.PlayerCaptionsTracklistRenderer.CaptionTracks[0].BaseURL
+		if config != nil {
+			config.Lang = captions.PlayerCaptionsTracklistRenderer.CaptionTracks[0].LanguageCode
+		}
 	}
 
-	transcriptResponse, err := http.Get(transcriptURL)
+	transcriptResponse, err := services.DefaultHttpClient().Get(transcriptURL)
 	if err != nil {
 		return nil, "", &YoutubeTranscriptError{Message: fmt.Sprintf("No transcripts are available for this video (%s)", videoId)}
 	}
