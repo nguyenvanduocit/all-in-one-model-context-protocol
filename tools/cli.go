@@ -3,6 +3,7 @@ package tools
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"os/user"
 	"runtime"
@@ -13,60 +14,68 @@ import (
 	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/util"
 )
 
-// RegisterCLITool registers the CLI tool with the MCP server
-func RegisterCLITool(s *server.MCPServer) {
-
+// RegisterScriptTool registers the script execution tool with the MCP server
+func RegisterScriptTool(s *server.MCPServer) {
 	currentUser, err := user.Current()
 	if err != nil {
 		currentUser = &user.User{HomeDir: "unknown"}
 	}
 
-	tool := mcp.NewTool("cli_execute",
-		mcp.WithDescription("Execute a single command line operation on user machine (not a persistent session) on " + runtime.GOOS),
-		mcp.WithString("command", mcp.Required(), mcp.Description("Command to execute")),
-		mcp.WithString("args", mcp.DefaultString(""), mcp.Description("Command arguments (space-separated)")),
-		mcp.WithString("working_dir", mcp.DefaultString(currentUser.HomeDir), mcp.Description("Working directory for command execution")),
+	tool := mcp.NewTool("execute_comand_line_script",
+		mcp.WithDescription("Execute a script file on user machine"),
+		mcp.WithString("content", mcp.Required(), mcp.Description("Script content to execute. Note: Current user OS is " + runtime.GOOS)),
+		mcp.WithString("interpreter", mcp.DefaultString("/bin/sh"), mcp.Description("Script interpreter (e.g., /bin/sh, /bin/bash, python, etc.)")),
+		mcp.WithString("working_dir", mcp.DefaultString(currentUser.HomeDir), mcp.Description("Working directory for script execution")),
 	)
 
-	s.AddTool(tool, util.ErrorGuard(cliExecuteHandler))
+	s.AddTool(tool, util.ErrorGuard(scriptExecuteHandler))
 }
 
-func cliExecuteHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-
-	commandElement, ok := arguments["command"]
+func scriptExecuteHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	// Get script content
+	contentElement, ok := arguments["content"]
 	if !ok {
-		return mcp.NewToolResultError("command must be a string"), nil
+		return mcp.NewToolResultError("content must be provided"), nil
 	}
-	command, ok := commandElement.(string)
-
+	content, ok := contentElement.(string)
 	if !ok {
-		return mcp.NewToolResultError("command must be a string"), nil
-	}
-
-	var argsStr string
-	argsElement, ok := arguments["args"]
-	if !ok {
-		argsStr = ""
-	} else {
-		argsStr = argsElement.(string)
+		return mcp.NewToolResultError("content must be a string"), nil
 	}
 
-	var workingDir string
-	workingDirElement, ok := arguments["working_dir"]
-	if !ok {
-		workingDir = ""
-	} else {
+	// Get interpreter
+	interpreter := "/bin/sh"
+	if interpreterElement, ok := arguments["interpreter"]; ok {
+		interpreter = interpreterElement.(string)
+	}
+
+	// Get working directory
+	workingDir := ""
+	if workingDirElement, ok := arguments["working_dir"]; ok {
 		workingDir = workingDirElement.(string)
 	}
 
-	// Split args string into slice, handling quoted arguments
-	var args []string
-	if argsStr != "" {
-		args = parseCommandArgs(argsStr)
+	// Create temporary script file
+	tmpFile, err := os.CreateTemp("", "script-*.sh")
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to create temporary file: %v", err)), nil
+	}
+	defer os.Remove(tmpFile.Name()) // Clean up
+
+	// Write content to temporary file
+	if _, err := tmpFile.WriteString(content); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to write to temporary file: %v", err)), nil
+	}
+	if err := tmpFile.Close(); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to close temporary file: %v", err)), nil
+	}
+
+	// Make the script executable
+	if err := os.Chmod(tmpFile.Name(), 0700); err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("Failed to make script executable: %v", err)), nil
 	}
 
 	// Create command
-	cmd := exec.Command(command, args...)
+	cmd := exec.Command(interpreter, tmpFile.Name())
 
 	// Set working directory if specified
 	if workingDir != "" {
@@ -78,18 +87,11 @@ func cliExecuteHandler(arguments map[string]interface{}) (*mcp.CallToolResult, e
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
-	// Execute command
-	err := cmd.Run()
+	// Execute script
+	err = cmd.Run()
 
 	// Build result
 	var result strings.Builder
-	result.WriteString(fmt.Sprintf("Single Command Execution:\n"))
-	result.WriteString(fmt.Sprintf("Command: %s %s\n", command, argsStr))
-	if workingDir != "" {
-		result.WriteString(fmt.Sprintf("Working Directory: %s\n", workingDir))
-	}
-	result.WriteString("\n")
-
 	if stdout.Len() > 0 {
 		result.WriteString("Output:\n")
 		result.WriteString(stdout.String())
@@ -107,45 +109,4 @@ func cliExecuteHandler(arguments map[string]interface{}) (*mcp.CallToolResult, e
 	}
 
 	return mcp.NewToolResultText(result.String()), nil
-}
-
-// parseCommandArgs splits a command string into arguments, respecting quoted strings
-func parseCommandArgs(argsStr string) []string {
-	var args []string
-	var currentArg strings.Builder
-	inQuotes := false
-	quoteChar := rune(0)
-
-	for _, char := range argsStr {
-		switch {
-		case char == '"' || char == '\'':
-			if inQuotes && char == quoteChar {
-				// End quote
-				inQuotes = false
-				quoteChar = rune(0)
-			} else if !inQuotes {
-				// Start quote
-				inQuotes = true
-				quoteChar = char
-			} else {
-				// Quote character inside another type of quote
-				currentArg.WriteRune(char)
-			}
-		case char == ' ' && !inQuotes:
-			// Space outside quotes - split argument
-			if currentArg.Len() > 0 {
-				args = append(args, currentArg.String())
-				currentArg.Reset()
-			}
-		default:
-			currentArg.WriteRune(char)
-		}
-	}
-
-	// Add final argument if exists
-	if currentArg.Len() > 0 {
-		args = append(args, currentArg.String())
-	}
-
-	return args
 }

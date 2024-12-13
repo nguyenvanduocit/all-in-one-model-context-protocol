@@ -23,14 +23,14 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
       "command": "all-in-one-model-context-protocol",
       "args": [],
       "env": {
-        "ATLASSIAN_TOKEN": "Token is the API token of the user",
-        "PROXY_URL": "",
-        "GOOGLE_AI_API_KEY": "",
         "GITLAB_TOKEN": "",
         "GITLAB_HOST": "",
         "BRAVE_API_KEY": "",
-        "ATLASSIAN_HOST": "Host is the URL of the Jira instance",
-        "ATLASSIAN_EMAIL": "Mail is the email of the user"
+        "ATLASSIAN_HOST": "",
+        "ATLASSIAN_EMAIL": "",
+        "ATLASSIAN_TOKEN": "",
+        "PROXY_URL": "",
+        "GOOGLE_AI_API_KEY": ""
       }
     }
   }
@@ -39,13 +39,15 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
 
 ## Available Tools
 
-### cli_execute
+### execute_comand_line_script
+
+Execute a script file on user machine
 
 Arguments:
 
-- `command` (String) (Required): Command to execute
-- `args` (String): Command arguments (space-separated)
-- `working_dir` (String): Working directory for command execution
+- `content` (String) (Required): 
+- `interpreter` (String) (Default: /bin/sh): Script interpreter (e.g., /bin/sh, /bin/bash, python, etc.)
+- `working_dir` (String): Working directory for script execution
 
 ### confluence_search
 

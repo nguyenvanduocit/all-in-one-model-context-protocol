@@ -10,19 +10,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-var ConfluenceClient = sync.OnceValue[*confluence.Client](func() *confluence.Client {
-	var (
-		//Host is the URL of the Confluence instance
-		host = os.Getenv("ATLASSIAN_HOST")
-		// Mail is the email of the user
-		mail  = os.Getenv("ATLASSIAN_EMAIL")
-		// Token is the API token of the user
-		token = os.Getenv("ATLASSIAN_TOKEN")
-	)
+func loadAtlassianCredentials() (host, mail, token string) {
+	host = os.Getenv("ATLASSIAN_HOST")
+	mail = os.Getenv("ATLASSIAN_EMAIL")
+	token = os.Getenv("ATLASSIAN_TOKEN")
 
 	if host == "" || mail == "" || token == "" {
 		log.Fatal("ATLASSIAN_HOST, ATLASSIAN_EMAIL, ATLASSIAN_TOKEN are required")
 	}
+
+	return host, mail, token
+}
+
+var ConfluenceClient = sync.OnceValue[*confluence.Client](func() *confluence.Client {
+	host, mail, token := loadAtlassianCredentials()
 
 	instance, err := confluence.New(nil, host)
 	if err != nil {
@@ -35,14 +36,7 @@ var ConfluenceClient = sync.OnceValue[*confluence.Client](func() *confluence.Cli
 })
 
 var JiraClient = sync.OnceValue[*jira.Client](func() *jira.Client {
-	var (
-		//Host is the URL of the Jira instance
-		host  = os.Getenv("ATLASSIAN_HOST")
-		//Mail is the email of the user
-		mail  = os.Getenv("ATLASSIAN_EMAIL")
-		//Token is the API token of the user
-		token = os.Getenv("ATLASSIAN_TOKEN")
-	)
+	host, mail, token := loadAtlassianCredentials()
 
 	if host == "" || mail == "" || token == "" {
 		log.Fatal("ATLASSIAN_HOST, ATLASSIAN_EMAIL, ATLASSIAN_TOKEN are required")

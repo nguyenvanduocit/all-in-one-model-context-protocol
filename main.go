@@ -31,7 +31,7 @@ func main() {
 	// GitLab tool
 	tools.RegisterGitLabTool(mcpServer)
 	// CLI tool
-	tools.RegisterCLITool(mcpServer)
+	tools.RegisterScriptTool(mcpServer)
 
 	// Start the stdio server
 	if err := server.ServeStdio(mcpServer); err != nil {

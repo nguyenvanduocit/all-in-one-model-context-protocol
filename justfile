@@ -3,3 +3,6 @@ build:
 
 docs:
   go run scripts/update-doc.go
+
+scan:
+  trufflehog git file://. --only-verified
