@@ -2,16 +2,6 @@
 
 A powerful Model Context Protocol (MCP) server implementation with integrations for GitLab, Jira, Confluence, YouTube, and more. This server provides AI-powered search capabilities and various utility tools for development workflows.
 
-## Features
-
-- 🔍 AI-powered web search using Google Gemini
-- 🎥 YouTube transcript extraction
-- 📝 Confluence and Jira integration
-- 🦊 GitLab project management and code analysis
-- 🌐 Web content fetching
-- 💻 Local CLI command execution
-- 🔎 Brave Search integration
-
 ## Prerequisites
 
 - Go 1.23.2 or higher
