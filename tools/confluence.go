@@ -10,7 +10,8 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 
-	"github.com/nguyenvanduocit/mymcpserver/services"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/services"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/util"
 )
 
 // registerConfluenceTool is a function that registers the confluence tools to the server
@@ -27,7 +28,7 @@ func RegisterConfluenceTool(s *server.MCPServer) {
 		mcp.WithDescription("Get Confluence page content"),
 		mcp.WithString("page_id", mcp.Required(), mcp.Description("Confluence page ID")),
 	)
-	s.AddTool(pageTool, confluencePageHandler)
+	s.AddTool(pageTool, util.ErrorGuard(confluencePageHandler))
 }
 
 // confluenceSearchHandler is a handler for the confluence search tool

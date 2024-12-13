@@ -2,28 +2,26 @@ package tools
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
-	"github.com/google/generative-ai-go/genai"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"google.golang.org/api/option"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/util"
+	"google.golang.org/genai"
 )
 
 func RegisterExpertTool(s *server.MCPServer) {
-	tool := mcp.NewTool("ask_expert_gemini",
-		mcp.WithDescription("Ask a question to an expert using Gemini"),
-		mcp.WithString("question", mcp.Required(), mcp.Description("The question to ask")),
+	tool := mcp.NewTool("ai_web_search",
+		mcp.WithDescription("search the web by using Google AI Search. Best tool to update realtime information"),
+		mcp.WithString("question", mcp.Required(), mcp.Description("The question to ask. Should be a question")),
 		// context
-		mcp.WithString("context", mcp.Required(), mcp.Description("Context of the question")),
-		mcp.WithString("session_id", mcp.Required(), mcp.Description("The session id to use, if not provided a new session will be created")),
+		mcp.WithString("context", mcp.Required(), mcp.Description("Context/purpose of the question, helps Gemini to understand the question better")),
 	)
 
-	s.AddTool(tool, commandLineExpertHandler)
+	s.AddTool(tool, util.ErrorGuard(aiWebSearchHandler))
 }
 
 var genAiClient = sync.OnceValue[*genai.Client](func() *genai.Client {
@@ -32,7 +30,12 @@ var genAiClient = sync.OnceValue[*genai.Client](func() *genai.Client {
 		panic("GOOGLE_AI_API_KEY environment variable must be set")
 	}
 
-	client, err := genai.NewClient(context.Background(), option.WithAPIKey(apiKey))
+	cfg := &genai.ClientConfig{
+		APIKey: apiKey,
+		Backend:  genai.BackendGoogleAI,
+	}
+
+	client, err := genai.NewClient(context.Background(), cfg)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create Gemini client: %s", err))
 	}
@@ -40,53 +43,33 @@ var genAiClient = sync.OnceValue[*genai.Client](func() *genai.Client {
 	return client
 })
 
-// sessionMap stores the chat sessions, key is the session id
-var sessionMap = sync.Map{}
-
-func commandLineExpertHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+func aiWebSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
 	question, ok := arguments["question"].(string)
 	if !ok {
 		return mcp.NewToolResultError("question must be a string"), nil
 	}
 
-	// get session id from arguments
-	sessionId, ok := arguments["session_id"].(string)
-	if !ok {
-		sessionId = ""
-	}
-
-	model := genAiClient().GenerativeModel("gemini-2.0-flash-exp")
-	model.SetTemperature(1)
-	model.SetTopK(40)
-	model.SetTopP(0.95)
-	model.SetMaxOutputTokens(8192)
-	model.ResponseMIMEType = "text/plain"
-
-	var session *genai.ChatSession
-	if sessionId == "" {
-		sessionId = generateSessionId()
-		session = model.StartChat()
-		session.History = []*genai.Content{}
-		sessionMap.Store(sessionId, session)
-	} else {
-		// load session from sessionMap
-		if sess, ok := sessionMap.Load(sessionId); ok {
-			session = sess.(*genai.ChatSession)
-		} else {
-			session = model.StartChat()
-			session.History = []*genai.Content{}
-			sessionMap.Store(sessionId, session)
-		}
-	}
+	systemInstruction := "You are a search engine. You will search the web for the answer to the question. You will then provide the answer to the question. Always try to search the web for the answer first before providing the answer. writing style: short, concise, direct, and to the point."
 
 	questionContext, ok := arguments["context"].(string)
 	if !ok {
-		questionContext = ""
+		systemInstruction += "\n\nContext: " + questionContext
 	}
 
-	question = "Context: " + questionContext + "\n\n" + "Question: " + question
 
-	resp, err := session.SendMessage(context.Background(), genai.Text(question))
+	resp, err := genAiClient().Models.GenerateContent(context.Background(),
+		"gemini-2.0-flash-exp",
+		genai.PartSlice{
+			genai.Text(question),
+		},
+		&genai.GenerateContentConfig{
+			SystemInstruction: genai.Text(systemInstruction).ToContent(),
+			Tools: []*genai.Tool{
+				{GoogleSearch: &genai.GoogleSearch{}},
+			},
+		},
+	)
+
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("failed to generate content: %s", err)), nil
 	}
@@ -95,23 +78,39 @@ func commandLineExpertHandler(arguments map[string]interface{}) (*mcp.CallToolRe
 		return mcp.NewToolResultError("no response from Gemini"), nil
 	}
 
-	text := ""
-	for _, part := range resp.Candidates[0].Content.Parts {
-		if t, ok := part.(genai.Text); ok {
-			text += string(t)
+	candidate := resp.Candidates[0]
+
+	var textBuilder strings.Builder
+	for _, part := range candidate.Content.Parts {
+		textBuilder.WriteString(part.Text)
+	}
+
+	if candidate.CitationMetadata != nil {
+		for _, citation := range candidate.CitationMetadata.Citations {
+			textBuilder.WriteString("\n\nSource: ")
+			textBuilder.WriteString(citation.URI)
 		}
 	}
 
+	if candidate.GroundingMetadata != nil {
+		textBuilder.WriteString("\n\nSources: ")
+		for _, chunk := range candidate.GroundingMetadata.GroundingChunks {
+			if chunk.RetrievedContext != nil {
+				textBuilder.WriteString("\n")
+				textBuilder.WriteString(chunk.RetrievedContext.Title)
+				textBuilder.WriteString(": ")
+				textBuilder.WriteString(chunk.RetrievedContext.URI)
+			}
 
-
-	return mcp.NewToolResultText("Session ID: " + sessionId + "\n\n" + text), nil
-}
-
-func generateSessionId() string {
-	b := make([]byte, 16)
-	_, err := rand.Read(b)
-	if err != nil {
-		panic(fmt.Sprintf("failed to generate random session id: %s", err))
+			if chunk.Web != nil {
+				textBuilder.WriteString("\n")
+				textBuilder.WriteString(chunk.Web.Title)
+				textBuilder.WriteString(": ")
+				textBuilder.WriteString(chunk.Web.URI)
+			}
+		}
 	}
-	return hex.EncodeToString(b)
+
+	return mcp.NewToolResultText(textBuilder.String()), nil
 }
+

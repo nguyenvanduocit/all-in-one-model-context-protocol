@@ -12,8 +12,11 @@ import (
 
 var ConfluenceClient = sync.OnceValue[*confluence.Client](func() *confluence.Client {
 	var (
-		host  = os.Getenv("ATLASSIAN_HOST")
+		//Host is the URL of the Confluence instance
+		host = os.Getenv("ATLASSIAN_HOST")
+		// Mail is the email of the user
 		mail  = os.Getenv("ATLASSIAN_EMAIL")
+		// Token is the API token of the user
 		token = os.Getenv("ATLASSIAN_TOKEN")
 	)
 
@@ -33,8 +36,11 @@ var ConfluenceClient = sync.OnceValue[*confluence.Client](func() *confluence.Cli
 
 var JiraClient = sync.OnceValue[*jira.Client](func() *jira.Client {
 	var (
+		//Host is the URL of the Jira instance
 		host  = os.Getenv("ATLASSIAN_HOST")
+		//Mail is the email of the user
 		mail  = os.Getenv("ATLASSIAN_EMAIL")
+		//Token is the API token of the user
 		token = os.Getenv("ATLASSIAN_TOKEN")
 	)
 

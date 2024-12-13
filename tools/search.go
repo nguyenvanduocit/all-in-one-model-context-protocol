@@ -10,6 +10,8 @@ import (
 	htmltomarkdown "github.com/JohannesKaufmann/html-to-markdown/v2"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/services"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/util"
 	"github.com/tidwall/gjson"
 )
 
@@ -21,7 +23,7 @@ func RegisterWebSearchTool(s *server.MCPServer) {
 		mcp.WithString("country", mcp.DefaultString("ALL"), mcp.Description("Country code")),
 	)
 
-	s.AddTool(tool, webSearchHandler)
+	s.AddTool(tool, util.ErrorGuard(webSearchHandler))
 }
 
 type SearchResult struct {
@@ -72,7 +74,7 @@ func webSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, er
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("X-Subscription-Token", apiKey)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := services.DefaultHttpClient().Do(req)
 	if err != nil {
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to perform search: %v", err)), nil
 	}
