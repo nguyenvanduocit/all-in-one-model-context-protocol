@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.1.0...v1.2.0) (2024-12-13)
+
+
+### Features
+
+* add documentation update script and modify justfile; enhance README structure by removing outdated features section ([a79bbb7](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/a79bbb77c40877dd34c8b5e4115968fa7922b6a7))
+* support gemini ([9027386](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/9027386c321074db8bd79eebf4bf159e0fff3fab))
+
 ## [1.1.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.0.0...v1.1.0) (2024-12-12)
 
 
