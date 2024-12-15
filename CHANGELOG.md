@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.4.0...v1.4.1) (2024-12-15)
+
+
+### Bug Fixes
+
+* improve formatting of context and chunk text in RAG tool output for better readability ([d3b030e](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/d3b030e521abb3dd645d3e762f313f02cc440e10))
+
 ## [1.4.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.3.0...v1.4.0) (2024-12-15)
 
 
