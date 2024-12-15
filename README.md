@@ -24,13 +24,17 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
       "args": [],
       "env": {
         "ATLASSIAN_EMAIL": "",
-        "ATLASSIAN_TOKEN": "",
         "PROXY_URL": "",
+        "OPENAI_API_KEY": "",
         "GOOGLE_AI_API_KEY": "",
+        "QDRANT_API_KEY": "",
+        "QDRANT_PORT": "",
+        "ATLASSIAN_HOST": "",
+        "ATLASSIAN_TOKEN": "",
         "GITLAB_TOKEN": "",
         "GITLAB_HOST": "",
         "BRAVE_API_KEY": "",
-        "ATLASSIAN_HOST": ""
+        "QDRANT_HOST": ""
       }
     }
   }
@@ -201,6 +205,63 @@ Arguments:
 - `query` (String) (Required): Query to search for (max 400 chars, 50 words)
 - `count` (Number) (Default: 5): Number of results (1-20, default 5)
 - `country` (String) (Default: ALL): Country code
+
+### RAG_memory_index_content
+
+Index a note into memory, can be inserted or updated
+
+Arguments:
+
+- `collection` (String) (Required): Memory collection name
+- `filePath` (String) (Required): note file path
+- `payload` (String) (Required): Plain text payload
+
+### RAG_memory_index_file
+
+Index a local file into memory
+
+Arguments:
+
+- `collection` (String) (Required): Memory collection name
+- `filePath` (String) (Required): Path to the local file to be indexed
+
+### RAG_memory_create_collection
+
+Create a new vector collection in memory
+
+Arguments:
+
+- `collection` (String) (Required): Memory collection name
+
+### RAG_memory_delete_collection
+
+Delete a vector collection in memory
+
+Arguments:
+
+- `collection` (String) (Required): Memory collection name
+
+### RAG_memory_list_collections
+
+List all vector collections in memory
+
+### RAG_memory_search
+
+Search for notes in a collection based on a query
+
+Arguments:
+
+- `collection` (String) (Required): Memory collection name
+- `query` (String) (Required): Search query
+
+### RAG_memory_delete_index_by_filepath
+
+Delete a vector index by filePath
+
+Arguments:
+
+- `collection` (String) (Required): Memory collection name
+- `filePath` (String) (Required): Path to the local file to be deleted
 
 ### youtube_transcript
 
