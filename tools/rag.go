@@ -20,21 +20,17 @@ import (
 var qdrantClient = sync.OnceValue[*qdrant.Client](func() *qdrant.Client {
 
 	host := os.Getenv("QDRANT_HOST")
-	if host == "" {
-		panic("QDRANT_HOST is not set")
+	port := os.Getenv("QDRANT_PORT")
+	apiKey := os.Getenv("QDRANT_API_KEY")
+	if host == "" || port == "" || apiKey == "" {
+		panic("QDRANT_HOST, QDRANT_PORT, or QDRANT_API_KEY is not set, please set it in MCP Config")
 	}
 
-	port := os.Getenv("QDRANT_PORT")
-	if port == "" {
-		panic("QDRANT_PORT is not set")
-	}
-	
 	portInt, err := strconv.Atoi(port)
 	if err != nil {
 		panic(fmt.Sprintf("failed to parse QDRANT_PORT: %v", err))
 	}
 
-	apiKey := os.Getenv("QDRANT_API_KEY")
 	if apiKey == "" {
 		panic("QDRANT_API_KEY is not set")
 	}
@@ -84,7 +80,7 @@ func RegisterRagTools(s *server.MCPServer) {
 	searchTool := mcp.NewTool("RAG_memory_search",
 		mcp.WithDescription("Search for notes in a collection based on a query"),
 		mcp.WithString("collection", mcp.Required(), mcp.Description("Memory collection name")),
-		mcp.WithString("query", mcp.Required(), mcp.Description("Search query")),
+		mcp.WithString("query", mcp.Required(), mcp.Description("Search term, should be a keyword or a phrase")),
 	)
 
 	deleteIndexByFilePathTool := mcp.NewTool("RAG_memory_delete_index_by_filepath",

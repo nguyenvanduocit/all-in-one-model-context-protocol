@@ -16,7 +16,7 @@ func loadAtlassianCredentials() (host, mail, token string) {
 	token = os.Getenv("ATLASSIAN_TOKEN")
 
 	if host == "" || mail == "" || token == "" {
-		log.Fatal("ATLASSIAN_HOST, ATLASSIAN_EMAIL, ATLASSIAN_TOKEN are required")
+		log.Fatal("ATLASSIAN_HOST, ATLASSIAN_EMAIL, ATLASSIAN_TOKEN are required, please set it in MCP Config")
 	}
 
 	return host, mail, token

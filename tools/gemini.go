@@ -13,7 +13,7 @@ import (
 	"google.golang.org/genai"
 )
 
-func RegisterExpertTool(s *server.MCPServer) {
+func RegisterGeminiTool(s *server.MCPServer) {
 	tool := mcp.NewTool("ai_web_search",
 		mcp.WithDescription("search the web by using Google AI Search. Best tool to update realtime information"),
 		mcp.WithString("question", mcp.Required(), mcp.Description("The question to ask. Should be a question")),
@@ -96,7 +96,7 @@ func aiWebSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, 
 		for _, chunk := range candidate.GroundingMetadata.GroundingChunks {
 			if chunk.RetrievedContext != nil {
 				textBuilder.WriteString("\n")
-				textBuilder.WriteString(chunk.RetrievedContext.Title)
+				textBuilder.WriteString(chunk.RetrievedContext.Text)
 				textBuilder.WriteString(": ")
 				textBuilder.WriteString(chunk.RetrievedContext.URI)
 			}

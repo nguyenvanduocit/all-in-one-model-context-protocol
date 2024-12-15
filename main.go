@@ -25,8 +25,8 @@ func main() {
 	//tools.RegisterWebSearchTool(mcpServer)
 
 	// Gemini powered search
-	if allToolsEnabled || slices.Contains(enableTools, "expert") {
-		tools.RegisterExpertTool(mcpServer)
+	if allToolsEnabled || slices.Contains(enableTools, "gemini") {
+		tools.RegisterGeminiTool(mcpServer)
 	}
 
 	// Fetch tool

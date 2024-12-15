@@ -23,7 +23,7 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
       "command": "all-in-one-model-context-protocol",
       "args": [],
       "env": {
-        "ENABLE_TOOLS": "cli,rag,expert,fetch,confluence,youtube,jira,gitlab,script",
+        "ENABLE_TOOLS": "rag,gemini,fetch,confluence,youtube,jira,gitlab,script",
         "ATLASSIAN_TOKEN": "",
         "PROXY_URL": "",
         "OPENAI_API_KEY": "",
@@ -49,7 +49,7 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
 
 Here is the list of tools group:
 
-- `expert`: Expert tools (Gemini-powered search)
+- `gemini`: Gemini-powered search
 - `fetch`: Fetch tools
 - `confluence`: Confluence tools
 - `youtube`: YouTube tools
