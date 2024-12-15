@@ -53,7 +53,7 @@ var qdrantClient = sync.OnceValue[*qdrant.Client](func() *qdrant.Client {
 	return client
 })
 
-func RegisterVectorTool(s *server.MCPServer) {
+func RegisterRagTools(s *server.MCPServer) {
 	indexContentTool := mcp.NewTool("RAG_memory_index_content",
 		mcp.WithDescription("Index a note into memory, can be inserted or updated"),
 		mcp.WithString("collection", mcp.Required(), mcp.Description("Memory collection name")),
