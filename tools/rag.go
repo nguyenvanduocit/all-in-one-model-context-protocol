@@ -356,7 +356,7 @@ File path: %s
 	}
 
 	context := resp.Choices[0].Message.Content
-	return fmt.Sprintf("Context: %s; Chunk: %s", context, chunkText), nil
+	return fmt.Sprintf("Context: \n%s;\n\nChunk: \n%s", context, chunkText), nil
 }
 
 func vectorSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
