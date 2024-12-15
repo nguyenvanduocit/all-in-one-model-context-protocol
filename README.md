@@ -23,18 +23,20 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
       "command": "all-in-one-model-context-protocol",
       "args": [],
       "env": {
-        "ATLASSIAN_EMAIL": "",
+        "ENABLE_TOOLS": "cli,rag,expert,fetch,confluence,youtube,jira,gitlab,script",
+        "ATLASSIAN_TOKEN": "",
         "PROXY_URL": "",
         "OPENAI_API_KEY": "",
         "GOOGLE_AI_API_KEY": "",
-        "QDRANT_API_KEY": "",
-        "QDRANT_PORT": "",
-        "ATLASSIAN_HOST": "",
-        "ATLASSIAN_TOKEN": "",
-        "GITLAB_TOKEN": "",
         "GITLAB_HOST": "",
+        "QDRANT_HOST": "",
+        "QDRANT_PORT": "",
+        "ENABLE_TOOLS": "",
         "BRAVE_API_KEY": "",
-        "QDRANT_HOST": ""
+        "ATLASSIAN_EMAIL": "",
+        "GITLAB_TOKEN": "",
+        "QDRANT_API_KEY": "",
+        "ATLASSIAN_HOST": ""
       }
     }
   }
@@ -196,16 +198,6 @@ Arguments:
 
 - `issue_key` (String) (Required): Jira issue key (e.g., KP-2)
 
-### web_search
-
-Search the web using Brave Search API
-
-Arguments:
-
-- `query` (String) (Required): Query to search for (max 400 chars, 50 words)
-- `count` (Number) (Default: 5): Number of results (1-20, default 5)
-- `country` (String) (Default: ALL): Country code
-
 ### RAG_memory_index_content
 
 Index a note into memory, can be inserted or updated
@@ -262,6 +254,16 @@ Arguments:
 
 - `collection` (String) (Required): Memory collection name
 - `filePath` (String) (Required): Path to the local file to be deleted
+
+### web_search
+
+Search the web using Brave Search API
+
+Arguments:
+
+- `query` (String) (Required): Query to search for (max 400 chars, 50 words)
+- `count` (Number) (Default: 5): Number of results (1-20, default 5)
+- `country` (String) (Default: ALL): Country code
 
 ### youtube_transcript
 

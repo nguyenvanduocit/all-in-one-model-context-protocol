@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"slices"
+	"strings"
 
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/tools"
@@ -15,33 +18,51 @@ func main() {
 		server.WithLogging(),
 	)
 
+	enableTools := strings.Split(os.Getenv("ENABLE_TOOLS"), ",")
+	allToolsEnabled := len(enableTools) == 1 && enableTools[0] == ""
+
 	// normal search
 	//tools.RegisterWebSearchTool(mcpServer)
 
 	// Gemini powered search
-	tools.RegisterExpertTool(mcpServer)
+	if allToolsEnabled || slices.Contains(enableTools, "expert") {
+		tools.RegisterExpertTool(mcpServer)
+	}
 
 	// Fetch tool
-	tools.RegisterFetchTool(mcpServer)
+	if allToolsEnabled || slices.Contains(enableTools, "fetch") {
+		tools.RegisterFetchTool(mcpServer)
+	}
 
 	// Confluence tool
-	tools.RegisterConfluenceTool(mcpServer)
+	if allToolsEnabled || slices.Contains(enableTools, "confluence") {
+		tools.RegisterConfluenceTool(mcpServer)
+	}
 
 	// YouTube tool
-	tools.RegisterYouTubeTool(mcpServer)
+	if allToolsEnabled || slices.Contains(enableTools, "youtube") {
+		tools.RegisterYouTubeTool(mcpServer)
+	}
 
 	// Jira tool
-	tools.RegisterJiraTool(mcpServer)
+	if allToolsEnabled || slices.Contains(enableTools, "jira") {
+		tools.RegisterJiraTool(mcpServer)
+	}
 
 	// GitLab tool
-	tools.RegisterGitLabTool(mcpServer)
+	if allToolsEnabled || slices.Contains(enableTools, "gitlab") {
+		tools.RegisterGitLabTool(mcpServer)
+	}
 
 	// CLI tool
-	tools.RegisterScriptTool(mcpServer)
+	if allToolsEnabled || slices.Contains(enableTools, "script") {
+		tools.RegisterScriptTool(mcpServer)
+	}
 
-	// Vector tool
-	tools.RegisterVectorTool(mcpServer)
-	
+	// Rag tool
+	if allToolsEnabled || slices.Contains(enableTools, "rag") {
+		tools.RegisterRagTools(mcpServer)
+	}
 
 	// Start the stdio server
 	if err := server.ServeStdio(mcpServer); err != nil {
