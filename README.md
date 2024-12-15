@@ -43,6 +43,21 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
 }
 ```
 
+## Enable Tools
+
+- `ENABLE_TOOLS`: Comma separated list of tools group to enable. If not set, all tools will be enabled.
+
+Here is the list of tools group:
+
+- `expert`: Expert tools (Gemini-powered search)
+- `fetch`: Fetch tools
+- `confluence`: Confluence tools
+- `youtube`: YouTube tools
+- `jira`: Jira tools
+- `gitlab`: GitLab tools
+- `script`: Script tools
+- `rag`: RAG tools
+
 ## Available Tools
 
 ### execute_comand_line_script
