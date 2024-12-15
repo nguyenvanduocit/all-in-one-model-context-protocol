@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/tools"
 )
@@ -18,23 +17,34 @@ func main() {
 
 	// normal search
 	//tools.RegisterWebSearchTool(mcpServer)
+
 	// Gemini powered search
 	tools.RegisterExpertTool(mcpServer)
+
 	// Fetch tool
 	tools.RegisterFetchTool(mcpServer)
+
 	// Confluence tool
 	tools.RegisterConfluenceTool(mcpServer)
+
 	// YouTube tool
 	tools.RegisterYouTubeTool(mcpServer)
+
 	// Jira tool
 	tools.RegisterJiraTool(mcpServer)
+
 	// GitLab tool
 	tools.RegisterGitLabTool(mcpServer)
+
 	// CLI tool
 	tools.RegisterScriptTool(mcpServer)
 
+	// Vector tool
+	tools.RegisterVectorTool(mcpServer)
+	
+
 	// Start the stdio server
 	if err := server.ServeStdio(mcpServer); err != nil {
-		mcp.NewToolResultError(fmt.Sprintf("Server error: %v", err))
+		panic(fmt.Sprintf("Server error: %v", err))
 	}
 }
