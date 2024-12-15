@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"os"
 
-	htmltomarkdown "github.com/JohannesKaufmann/html-to-markdown/v2"
+	htmltomarkdownnnn "github.com/JohannesKaufmann/html-to-markdown/v2"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/services"
@@ -96,7 +96,7 @@ func webSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, er
 	videoResults := gbody.Get("videos.results")
 	for _, video := range videoResults.Array() {
 
-		mdContent, err := htmltomarkdown.ConvertString(video.Get("description").String())
+		mdContent, err := htmltomarkdownnnn.ConvertString(video.Get("description").String())
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert HTML to Markdown: %v", err)
 		}
@@ -113,7 +113,7 @@ func webSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, er
 	webResults := gbody.Get("web.results")
 	for _, web := range webResults.Array() {
 
-		mdContent, err := htmltomarkdown.ConvertString(web.Get("description").String())
+		mdContent, err := htmltomarkdownnnn.ConvertString(web.Get("description").String())
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert HTML to Markdown: %v", err)
 		}

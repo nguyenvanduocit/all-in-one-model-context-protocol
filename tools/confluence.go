@@ -108,14 +108,12 @@ func confluencePageHandler(arguments map[string]interface{}) (*mcp.CallToolResul
 Title: %s
 ID: %s
 Type: %s
-Link: %s
 Content:
 %s
 `,
 		content.Title,
 		content.ID,
 		content.Type,
-		content.Links.Self,
 		mdContent,
 	)
 

@@ -56,7 +56,6 @@ func aiWebSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, 
 		systemInstruction += "\n\nContext: " + questionContext
 	}
 
-
 	resp, err := genAiClient().Models.GenerateContent(context.Background(),
 		"gemini-2.0-flash-exp",
 		genai.PartSlice{

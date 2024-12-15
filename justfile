@@ -6,3 +6,6 @@ docs:
 
 scan:
   trufflehog git file://. --only-verified
+
+install:
+  go install ./...
