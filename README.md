@@ -2,6 +2,8 @@
 
 A powerful Model Context Protocol (MCP) server implementation with integrations for GitLab, Jira, Confluence, YouTube, and more. This server provides AI-powered search capabilities and various utility tools for development workflows.
 
+[Tutorial](https://www.youtube.com/watch?v=XnDFtYKU6xU)
+
 ## Prerequisites
 
 - Go 1.23.2 or higher
