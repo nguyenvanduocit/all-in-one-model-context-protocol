@@ -64,8 +64,14 @@ func main() {
 		tools.RegisterRagTools(mcpServer)
 	}
 
+	// Gmail tool
+	if allToolsEnabled || slices.Contains(enableTools, "gmail") {
+		tools.RegisterGmailTools(mcpServer)
+	}
+
 	// Start the stdio server
 	if err := server.ServeStdio(mcpServer); err != nil {
 		panic(fmt.Sprintf("Server error: %v", err))
 	}
+	
 }
