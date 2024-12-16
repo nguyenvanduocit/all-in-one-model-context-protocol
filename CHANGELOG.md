@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.4.1...v1.5.0) (2024-12-16)
+
+
+### Features
+
+* enhance Jira toolset with new functionalities including issue creation, updating, searching, and sprint listing; update README with community support section and detailed tool descriptions ([a059da8](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/a059da8ee379f5560fa38e0adbcd693f5533ff9e))
+
 ## [1.4.1](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.4.0...v1.4.1) (2024-12-15)
 
 
