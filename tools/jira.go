@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
@@ -206,18 +207,46 @@ func jiraSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, e
 		return mcp.NewToolResultText("No issues found matching the search criteria."), nil
 	}
 
-	var result string
+	var sb strings.Builder
 	for _, issue := range searchResult.Issues {
-		result += fmt.Sprintf("Key: %s\nSummary: %s\nStatus: %s\nCreated: %s\nUpdated: %s\nResolution date: %s\n\n", 
-			issue.Key, 
-			issue.Fields.Summary, 
-			issue.Fields.Status.Name,
-			issue.Fields.Created,
-			issue.Fields.Resolutiondate,
-			issue.Fields.Updated)
+		sb.WriteString(fmt.Sprintf("Key: %s\n", issue.Key))
+
+		if issue.Fields.Summary != "" {
+			sb.WriteString(fmt.Sprintf("Summary: %s\n", issue.Fields.Summary))
+		}
+
+		if issue.Fields.Status != nil && issue.Fields.Status.Name != "" {
+			sb.WriteString(fmt.Sprintf("Status: %s\n", issue.Fields.Status.Name))
+		}
+
+		if issue.Fields.Created != "" {
+			sb.WriteString(fmt.Sprintf("Created: %s\n", issue.Fields.Created))
+		}
+
+		if issue.Fields.Updated != "" {
+			sb.WriteString(fmt.Sprintf("Updated: %s\n", issue.Fields.Updated))
+		}
+
+		if issue.Fields.Assignee != nil {
+			sb.WriteString(fmt.Sprintf("Assignee: %s\n", issue.Fields.Assignee.DisplayName))
+		} else {
+			sb.WriteString("Assignee: Unassigned\n")
+		}
+
+		if issue.Fields.Priority != nil {
+			sb.WriteString(fmt.Sprintf("Priority: %s\n", issue.Fields.Priority.Name))
+		} else {
+			sb.WriteString("Priority: Unset\n") 
+		}
+
+		if issue.Fields.Resolutiondate != "" {
+			sb.WriteString(fmt.Sprintf("Resolution date: %s\n", issue.Fields.Resolutiondate))
+		}
+
+		sb.WriteString("\n")
 	}
 
-	return mcp.NewToolResultText(result), nil
+	return mcp.NewToolResultText(sb.String()), nil
 }
 
 func jiraIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {

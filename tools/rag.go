@@ -272,67 +272,69 @@ func indexContentHandler(arguments map[string]interface{}) (*mcp.CallToolResult,
 }
 
 func splitIntoChunks(content string, filePath string) ([]string, error) {
-	const (
-		maxTokensPerChunk = 512
-		overlapTokens     = 50
-		model             = "text-embedding-3-large"
-	)
+    const (
+        maxTokensPerChunk = 512
+        overlapTokens     = 50
+        model             = "text-embedding-3-large"
+    )
 
-	encoding, err := tiktoken.GetEncoding("cl100k_base")
-	if err != nil {
-		return nil, fmt.Errorf("failed to get encoding: %v", err)
-	}
+    encoding, err := tiktoken.GetEncoding("cl100k_base")
+    if err != nil {
+        return nil, fmt.Errorf("failed to get encoding: %v", err)
+    }
 
-	tokens := encoding.Encode(content, nil, nil)
+    tokens := encoding.Encode(content, nil, nil)
 
-	var chunks []string
-	var currentChunk []int
+    var chunks []string
+    var currentChunk []int
 
-	for i := 0; i < len(tokens); i++ {
-		currentChunk = append(currentChunk, tokens[i])
+    // First pass: collect all chunks without context
+    var rawChunks []string
+    for i := 0; i < len(tokens); i++ {
+        currentChunk = append(currentChunk, tokens[i])
 
-		if len(currentChunk) >= maxTokensPerChunk {
-			chunkText := encoding.Decode(currentChunk)
+        if len(currentChunk) >= maxTokensPerChunk {
+            chunkText := encoding.Decode(currentChunk)
+            rawChunks = append(rawChunks, chunkText)
 
-			// Generate context for the chunk
-			contextualizedChunk, err := generateContext(content, chunkText, filePath)
-			if err != nil {
-				return nil, fmt.Errorf("failed to generate context: %v", err)
-			}
+            if len(currentChunk) > overlapTokens {
+                currentChunk = currentChunk[len(currentChunk)-overlapTokens:]
+            } else {
+                currentChunk = []int{}
+            }
+        }
+    }
 
-			chunks = append(chunks, contextualizedChunk)
+    // Handle remaining tokens
+    if len(currentChunk) > 0 {
+        chunkText := encoding.Decode(currentChunk)
+        rawChunks = append(rawChunks, chunkText)
+    }
 
-			if len(currentChunk) > overlapTokens {
-				currentChunk = currentChunk[len(currentChunk)-overlapTokens:]
-			} else {
-				currentChunk = []int{}
-			}
-		}
-	}
+    // If there's only one chunk, return it without context
+    if len(rawChunks) == 1 {
+        return rawChunks, nil
+    }
 
-	if len(currentChunk) > 0 {
-		chunkText := encoding.Decode(currentChunk)
+    // If there are multiple chunks, add context to each
+    for _, chunkText := range rawChunks {
+        contextualizedChunk, err := generateContext(content, chunkText)
+        if err != nil {
+            return nil, fmt.Errorf("failed to generate context: %v", err)
+        }
+        chunks = append(chunks, contextualizedChunk)
+    }
 
-		// Generate context for the chunk
-		contextualizedChunk, err := generateContext(content, chunkText, filePath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to generate context: %v", err)
-		}
-
-		chunks = append(chunks, contextualizedChunk)
-	}
-
-	return chunks, nil
+    return chunks, nil
 }
 
-func generateContext(fullText, chunkText, filePath string) (string, error) {
+func generateContext(fullText, chunkText string) (string, error) {
 	prompt := fmt.Sprintf(`
 <document>%s</document>
 Here is the chunk we want to situate within the whole document:
 <chunk>%s</chunk>
 Please give a short succinct context to situate this chunk within the overall document for the purposes of improving search retrieval of the chunk. Answer only with the succinct context and nothing else.
-File path: %s
-	`, fullText, chunkText, filePath)
+	`, fullText, chunkText)
 
 	resp, err := services.DefaultOpenAIClient().CreateChatCompletion(
 		context.Background(),
@@ -368,10 +370,13 @@ func vectorSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult,
 		return nil, fmt.Errorf("failed to generate embeddings for query: %v", err)
 	}
 
+
+	scoreThreshold := float32(0.6)
 	// Search Qdrant
 	searchResult, err := qdrantClient().Query(context.Background(), &qdrant.QueryPoints{
 		CollectionName: collection,
 		Query:         qdrant.NewQuery(resp.Data[0].Embedding...),
+		ScoreThreshold: &scoreThreshold,
 		WithPayload:    &qdrant.WithPayloadSelector{
 			SelectorOptions: &qdrant.WithPayloadSelector_Enable{
 				Enable: true,
