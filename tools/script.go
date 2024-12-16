@@ -2,12 +2,14 @@ package tools
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"os/user"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -74,8 +76,11 @@ func scriptExecuteHandler(arguments map[string]interface{}) (*mcp.CallToolResult
 		return mcp.NewToolResultError(fmt.Sprintf("Failed to make script executable: %v", err)), nil
 	}
 
-	// Create command
-	cmd := exec.Command(interpreter, tmpFile.Name())
+	// Create command with context for timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	
+	cmd := exec.CommandContext(ctx, interpreter, tmpFile.Name())
 
 	// Set working directory if specified
 	if workingDir != "" {
@@ -89,6 +94,11 @@ func scriptExecuteHandler(arguments map[string]interface{}) (*mcp.CallToolResult
 
 	// Execute script
 	err = cmd.Run()
+
+	// Check if the error was due to timeout
+	if ctx.Err() == context.DeadlineExceeded {
+		return mcp.NewToolResultError("Script execution timed out after 30 seconds"), nil
+	}
 
 	// Build result
 	var result strings.Builder
