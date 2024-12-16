@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/ctreminiom/go-atlassian/confluence"
+	"github.com/ctreminiom/go-atlassian/jira/agile"
 	jira "github.com/ctreminiom/go-atlassian/jira/v2"
 	"github.com/pkg/errors"
 )
@@ -45,6 +46,19 @@ var JiraClient = sync.OnceValue[*jira.Client](func() *jira.Client {
 	instance, err := jira.New(nil, host)
 	if err != nil {
 		log.Fatal(errors.WithMessage(err, "failed to create jira client"))
+	}
+
+	instance.Auth.SetBasicAuth(mail, token)
+
+	return instance
+})
+
+var AgileClient = sync.OnceValue[*agile.Client](func() *agile.Client {
+	host, mail, token := loadAtlassianCredentials()
+
+	instance, err := agile.New(nil, host)
+	if err != nil {
+		log.Fatal(errors.WithMessage(err, "failed to create agile client"))
 	}
 
 	instance.Auth.SetBasicAuth(mail, token)
