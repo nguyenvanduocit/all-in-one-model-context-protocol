@@ -106,6 +106,15 @@ func RegisterGitLabTool(s *server.MCPServer) {
 		mcp.WithString("group_id", mcp.Required(), mcp.Description("GitLab group ID")),
 	)
 
+	createMRTool := mcp.NewTool("gitlab_create_mr",
+		mcp.WithDescription("Create a new merge request"),
+		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("source_branch", mcp.Required(), mcp.Description("Source branch name")),
+		mcp.WithString("target_branch", mcp.Required(), mcp.Description("Target branch name")),
+		mcp.WithString("title", mcp.Required(), mcp.Description("Merge request title")),
+		mcp.WithString("description", mcp.Description("Merge request description")),
+	)
+
 	s.AddTool(listProjectsTool, util.ErrorGuard(listProjectsHandler))
 	s.AddTool(projectTool, util.ErrorGuard(getProjectHandler))
 	s.AddTool(mrListTool, util.ErrorGuard(listMergeRequestsHandler))
@@ -117,6 +126,7 @@ func RegisterGitLabTool(s *server.MCPServer) {
 	s.AddTool(commitDetailsTool, util.ErrorGuard(getCommitDetailsHandler))
 	s.AddTool(userEventsTool, util.ErrorGuard(listUserEventsHandler))
 	s.AddTool(listGroupUsersTool, util.ErrorGuard(listGroupUsersHandler))
+	s.AddTool(createMRTool, util.ErrorGuard(createMergeRequestHandler))
 }
 
 func listProjectsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
@@ -663,4 +673,44 @@ func getAccessLevelString(level gitlab.AccessLevelValue) string {
 	default:
 		return fmt.Sprintf("Unknown (%d)", level)
 	}
+}
+
+func createMergeRequestHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	projectID := arguments["project_id"].(string)
+	sourceBranch := arguments["source_branch"].(string)
+	targetBranch := arguments["target_branch"].(string)
+	title := arguments["title"].(string)
+
+	opt := &gitlab.CreateMergeRequestOptions{
+		Title:        gitlab.String(title),
+		SourceBranch: gitlab.String(sourceBranch),
+		TargetBranch: gitlab.String(targetBranch),
+	}
+
+	// Add description if provided
+	if description, ok := arguments["description"]; ok {
+		opt.Description = gitlab.String(description.(string))
+	}
+
+	mr, _, err := gitlabClient().MergeRequests.CreateMergeRequest(projectID, opt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create merge request: %v", err)
+	}
+
+	result := strings.Builder{}
+	result.WriteString("Merge Request created successfully!\n\n")
+	result.WriteString(fmt.Sprintf("MR #%d: %s\n", mr.IID, mr.Title))
+	result.WriteString(fmt.Sprintf("State: %s\n", mr.State))
+	result.WriteString(fmt.Sprintf("Source Branch: %s\n", mr.SourceBranch))
+	result.WriteString(fmt.Sprintf("Target Branch: %s\n", mr.TargetBranch))
+	result.WriteString(fmt.Sprintf("Author: %s\n", mr.Author.Username))
+	result.WriteString(fmt.Sprintf("Created: %s\n", mr.CreatedAt.Format("2006-01-02 15:04:05")))
+	result.WriteString(fmt.Sprintf("URL: %s\n", mr.WebURL))
+
+	if mr.Description != "" {
+		result.WriteString("\nDescription:\n")
+		result.WriteString(mr.Description)
+	}
+
+	return mcp.NewToolResultText(result.String()), nil
 }
