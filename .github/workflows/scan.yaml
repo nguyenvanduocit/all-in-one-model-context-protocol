@@ -1,9 +1,6 @@
 name: Security and Licence Scan
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
 
 jobs:
