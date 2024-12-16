@@ -17,24 +17,24 @@ import (
 // RegisterJiraTool registers the Jira tools to the server
 func RegisterJiraTool(s *server.MCPServer) {
 	// Add Jira tool
-	jiraTool := mcp.NewTool("get_jira_issue",
+	jiraTool := mcp.NewTool("jira_get_issue",
 		mcp.WithDescription("Get Jira issue details"),
 		mcp.WithString("issue_key", mcp.Required(), mcp.Description("Jira issue key (e.g., KP-2)")),
 	)
 
 	// Add Jira search tool
-	jiraSearchTool := mcp.NewTool("search_jira_issue",
+	jiraSearchTool := mcp.NewTool("jira_search_issue",
 		mcp.WithDescription("Search/list for Jira issues by JQL"),
 		mcp.WithString("jql", mcp.Required(), mcp.Description("JQL query to search/list for Jira issues")),
 	)
 
 	 // Add Jira list sprint tool
-    jiraListSprintTool := mcp.NewTool("list_jira_sprints",
+    jiraListSprintTool := mcp.NewTool("jira_list_sprints",
         mcp.WithDescription("List all sprints in a Jira project"),
         mcp.WithString("board_id", mcp.Required(), mcp.Description("Jira board ID")),
     )
 
-		jiraCreateIssueTool := mcp.NewTool("create_jira_issue",
+		jiraCreateIssueTool := mcp.NewTool("jira_create_issue",
 		mcp.WithDescription("Create a new Jira issue"),
 		mcp.WithString("project_key", mcp.Required(), mcp.Description("Jira project key (e.g., KP)")),
 		mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the issue")),
@@ -42,7 +42,7 @@ func RegisterJiraTool(s *server.MCPServer) {
 		mcp.WithString("issue_type", mcp.Required(), mcp.Description("Type of the issue (e.g., Bug, Task)")),
 	)
 
-	jiraUpdateIssueTool := mcp.NewTool("update_jira_issue",
+	jiraUpdateIssueTool := mcp.NewTool("jira_update_issue",
     mcp.WithDescription("Update an existing Jira issue"),
     mcp.WithString("issue_key", mcp.Required(), mcp.Description("Jira issue key (e.g., KP-2)")),
     mcp.WithString("summary", mcp.Description("New summary of the issue")),

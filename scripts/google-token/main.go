@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/services"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
@@ -42,7 +43,7 @@ func main() {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
 
-	config, err := google.ConfigFromJSON(b, gmail.GmailLabelsScope, gmail.GmailModifyScope, gmail.MailGoogleComScope, gmail.GmailSettingsBasicScope)
+	config, err := google.ConfigFromJSON(b, services.ListGoogleScopes()...)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
