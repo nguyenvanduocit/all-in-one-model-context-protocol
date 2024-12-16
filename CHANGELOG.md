@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.7.0...v1.8.0) (2024-12-16)
+
+
+### Features
+
+* add Google Calendar integration; implement tools for creating, listing, updating events, and responding to invitations; refactor Gmail tools to utilize shared Google API services; update dependencies in go.mod and go.sum; add Google token JSON file for authentication ([0ded1bb](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/0ded1bb710c7ea0266f50f47b127998ae7dcfa9c))
+
 ## [1.7.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.6.0...v1.7.0) (2024-12-16)
 
 
