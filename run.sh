@@ -1,3 +1,0 @@
-#!/bin/bash
-
-dotenv -e ./.envrc go run ./cmd/server/...
