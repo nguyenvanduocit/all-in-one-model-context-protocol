@@ -68,6 +68,10 @@ func main() {
 		tools.RegisterCalendarTools(mcpServer)
 	}
 
+	if isEnabled("youtube_channel") {
+		tools.RegisterYouTubeChannelTools(mcpServer)
+	}
+
 	// Start the stdio server
 	if err := server.ServeStdio(mcpServer); err != nil {
 		panic(fmt.Sprintf("Server error: %v", err))

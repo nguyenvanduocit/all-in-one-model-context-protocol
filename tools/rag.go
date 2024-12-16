@@ -51,9 +51,9 @@ var qdrantClient = sync.OnceValue[*qdrant.Client](func() *qdrant.Client {
 
 func RegisterRagTools(s *server.MCPServer) {
 	indexContentTool := mcp.NewTool("RAG_memory_index_content",
-		mcp.WithDescription("Index a note into memory, can be inserted or updated"),
+		mcp.WithDescription("Index a content into memory, can be inserted or updated"),
 		mcp.WithString("collection", mcp.Required(), mcp.Description("Memory collection name")),
-		mcp.WithString("filePath", mcp.Required(), mcp.Description("note file path")),
+		mcp.WithString("filePath", mcp.Required(), mcp.Description("content file path")),
 		mcp.WithString("payload", mcp.Required(), mcp.Description("Plain text payload")),
 	)
 
@@ -78,7 +78,7 @@ func RegisterRagTools(s *server.MCPServer) {
 	)
 
 	searchTool := mcp.NewTool("RAG_memory_search",
-		mcp.WithDescription("Search for notes in a collection based on a query"),
+		mcp.WithDescription("Search for memory in a collection based on a query"),
 		mcp.WithString("collection", mcp.Required(), mcp.Description("Memory collection name")),
 		mcp.WithString("query", mcp.Required(), mcp.Description("Search term, should be a keyword or a phrase")),
 	)
