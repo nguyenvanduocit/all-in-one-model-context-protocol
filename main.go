@@ -18,60 +18,58 @@ func main() {
 		server.WithLogging(),
 	)
 
+	// Check environment variable first for backward compatibility
 	enableTools := strings.Split(os.Getenv("ENABLE_TOOLS"), ",")
 	allToolsEnabled := len(enableTools) == 1 && enableTools[0] == ""
 
-	// normal search
-	//tools.RegisterWebSearchTool(mcpServer)
+	// Helper function to check if a tool should be enabled
+	isEnabled := func(toolName string) bool {
+		return allToolsEnabled || slices.Contains(enableTools, toolName)
+	}
 
-	// Gemini powered search
-	if allToolsEnabled || slices.Contains(enableTools, "gemini") {
+	// Register tools based on preferences
+	if isEnabled("gemini") {
 		tools.RegisterGeminiTool(mcpServer)
 	}
 
-	// Fetch tool
-	if allToolsEnabled || slices.Contains(enableTools, "fetch") {
+	if isEnabled("fetch") {
 		tools.RegisterFetchTool(mcpServer)
 	}
 
-	// Confluence tool
-	if allToolsEnabled || slices.Contains(enableTools, "confluence") {
+	if isEnabled("confluence") {
 		tools.RegisterConfluenceTool(mcpServer)
 	}
 
-	// YouTube tool
-	if allToolsEnabled || slices.Contains(enableTools, "youtube") {
+	if isEnabled("youtube") {
 		tools.RegisterYouTubeTool(mcpServer)
 	}
 
-	// Jira tool
-	if allToolsEnabled || slices.Contains(enableTools, "jira") {
+	if isEnabled("jira") {
 		tools.RegisterJiraTool(mcpServer)
 	}
 
-	// GitLab tool
-	if allToolsEnabled || slices.Contains(enableTools, "gitlab") {
+	if isEnabled("gitlab") {
 		tools.RegisterGitLabTool(mcpServer)
 	}
 
-	// CLI tool
-	if allToolsEnabled || slices.Contains(enableTools, "script") {
+	if isEnabled("script") {
 		tools.RegisterScriptTool(mcpServer)
 	}
 
-	// Rag tool
-	if allToolsEnabled || slices.Contains(enableTools, "rag") {
+	if isEnabled("rag") {
 		tools.RegisterRagTools(mcpServer)
 	}
 
-	// Gmail tool
-	if allToolsEnabled || slices.Contains(enableTools, "gmail") {
+	if isEnabled("gmail") {
 		tools.RegisterGmailTools(mcpServer)
+	}
+
+	if isEnabled("calendar") {
+		tools.RegisterCalendarTools(mcpServer)
 	}
 
 	// Start the stdio server
 	if err := server.ServeStdio(mcpServer); err != nil {
 		panic(fmt.Sprintf("Server error: %v", err))
 	}
-	
 }

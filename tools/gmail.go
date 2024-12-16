@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -11,9 +10,8 @@ import (
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/services"
 	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/util"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"google.golang.org/api/gmail/v1"
 	"google.golang.org/api/option"
 )
@@ -66,57 +64,39 @@ func RegisterGmailTools(s *server.MCPServer) {
         mcp.WithString("filter_id", mcp.Required(), mcp.Description("The ID of the filter to delete")),
     )
     s.AddTool(deleteFilterTool, util.ErrorGuard(gmailDeleteFilterHandler))
+
+    // Add delete label tool
+    deleteLabelTool := mcp.NewTool("gmail_delete_label",
+        mcp.WithDescription("Delete a Gmail label by its ID"),
+        mcp.WithString("label_id", mcp.Required(), mcp.Description("The ID of the label to delete")),
+    )
+    s.AddTool(deleteLabelTool, util.ErrorGuard(gmailDeleteLabelHandler))
 }
 
-// Retrieves a token from a local file.
-func tokenFromFile(file string) (*oauth2.Token, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	tok := &oauth2.Token{}
-	err = json.NewDecoder(f).Decode(tok)
-	return tok, err
-}
+
+
 
 var gmailService = sync.OnceValue[*gmail.Service](func() *gmail.Service {
-    tokenFile := os.Getenv("GOOGLE_TOKEN_FILE")
-    if tokenFile == "" {
-        panic("GOOGLE_TOKEN_FILE environment variable must be set")
-    }
+	ctx := context.Background()
 
-	tok, err := tokenFromFile(tokenFile)
-	if err != nil {
-		panic(fmt.Sprintf("failed to read token file: %v", err))
+    tokenFile := os.Getenv("GOOGLE_TOKEN_FILE")
+	if tokenFile == "" {
+		panic("GOOGLE_TOKEN_FILE environment variable must be set")
 	}
-	
+
 	credentialsFile := os.Getenv("GOOGLE_CREDENTIALS_FILE")
 	if credentialsFile == "" {
 		panic("GOOGLE_CREDENTIALS_FILE environment variable must be set")
 	}
 
-	ctx := context.Background()
-	b, err := os.ReadFile(credentialsFile)
+	client := services.GoogleHttpClient(tokenFile, credentialsFile)
+
+	srv, err := gmail.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
+		panic(fmt.Sprintf("failed to create Gmail service: %v", err))
 	}
 
-	// If modifying these scopes, delete your previously saved token.json.
-	config, err := google.ConfigFromJSON(b, gmail.GmailLabelsScope, gmail.GmailModifyScope, gmail.MailGoogleComScope, gmail.GmailSettingsBasicScope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
-	}
-
-	// Create client with token
-	client := config.Client(ctx, tok)
-    // Create Gmail service
-    srv, err := gmail.NewService(ctx, option.WithHTTPClient(client))
-    if err != nil {
-        panic(fmt.Sprintf("failed to create Gmail service: %v", err))
-    }
-
-    return srv
+	return srv
 })
 
 func gmailSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
@@ -369,4 +349,22 @@ func gmailDeleteFilterHandler(arguments map[string]interface{}) (*mcp.CallToolRe
     }
 
     return mcp.NewToolResultText(fmt.Sprintf("Successfully deleted filter with ID: %s", filterID)), nil
+}
+
+func gmailDeleteLabelHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	labelID, ok := arguments["label_id"].(string)
+	if !ok {
+		return mcp.NewToolResultError("label_id must be a string"), nil
+	}
+
+	if labelID == "" {
+		return mcp.NewToolResultError("label_id cannot be empty"), nil
+	}
+
+	err := gmailService().Users.Labels.Delete("me", labelID).Do()
+	if err != nil {
+		return mcp.NewToolResultError(fmt.Sprintf("failed to delete label: %v", err)), nil
+	}
+
+	return mcp.NewToolResultText(fmt.Sprintf("Successfully deleted label with ID: %s", labelID)), nil
 }

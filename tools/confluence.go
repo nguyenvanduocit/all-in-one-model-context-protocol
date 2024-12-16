@@ -24,7 +24,7 @@ func RegisterConfluenceTool(s *server.MCPServer) {
 	s.AddTool(tool, confluenceSearchHandler)
 
 	// Add new tool for getting page content
-	pageTool := mcp.NewTool("get_confluence_page",
+	pageTool := mcp.NewTool("confluence_get_page",
 		mcp.WithDescription("Get Confluence page content"),
 		mcp.WithString("page_id", mcp.Required(), mcp.Description("Confluence page ID")),
 	)
