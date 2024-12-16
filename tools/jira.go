@@ -3,8 +3,10 @@ package tools
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/ctreminiom/go-atlassian/pkg/infra/models"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/services"
@@ -19,7 +21,203 @@ func RegisterJiraTool(s *server.MCPServer) {
 		mcp.WithString("issue_key", mcp.Required(), mcp.Description("Jira issue key (e.g., KP-2)")),
 	)
 
+	// Add Jira search tool
+	jiraSearchTool := mcp.NewTool("search_jira_issue",
+		mcp.WithDescription("Search/list for Jira issues by JQL"),
+		mcp.WithString("jql", mcp.Required(), mcp.Description("JQL query to search/list for Jira issues")),
+	)
+
+	 // Add Jira list sprint tool
+    jiraListSprintTool := mcp.NewTool("list_jira_sprints",
+        mcp.WithDescription("List all sprints in a Jira project"),
+        mcp.WithString("board_id", mcp.Required(), mcp.Description("Jira board ID")),
+    )
+
+		jiraCreateIssueTool := mcp.NewTool("create_jira_issue",
+		mcp.WithDescription("Create a new Jira issue"),
+		mcp.WithString("project_key", mcp.Required(), mcp.Description("Jira project key (e.g., KP)")),
+		mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the issue")),
+		mcp.WithString("description", mcp.Required(), mcp.Description("Description of the issue")),
+		mcp.WithString("issue_type", mcp.Required(), mcp.Description("Type of the issue (e.g., Bug, Task)")),
+	)
+
+	jiraUpdateIssueTool := mcp.NewTool("update_jira_issue",
+    mcp.WithDescription("Update an existing Jira issue"),
+    mcp.WithString("issue_key", mcp.Required(), mcp.Description("Jira issue key (e.g., KP-2)")),
+    mcp.WithString("summary", mcp.Description("New summary of the issue")),
+    mcp.WithString("description", mcp.Description("New description of the issue")),
+    mcp.WithString("status", mcp.Description("New status of the issue")),
+)
+
 	s.AddTool(jiraTool, util.ErrorGuard(jiraIssueHandler))
+	s.AddTool(jiraSearchTool, util.ErrorGuard(jiraSearchHandler))
+	s.AddTool(jiraListSprintTool, util.ErrorGuard(jiraListSprintHandler))
+	s.AddTool(jiraCreateIssueTool, util.ErrorGuard(jiraCreateIssueHandler))
+	s.AddTool(jiraUpdateIssueTool, util.ErrorGuard(jiraUpdateIssueHandler))
+}
+
+
+func jiraUpdateIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+    client := services.JiraClient()
+
+    issueKey, ok := arguments["issue_key"].(string)
+    if !ok {
+        return nil, fmt.Errorf("issue_key argument is required")
+    }
+
+    // Create update payload
+    payload := &models.IssueSchemeV2{
+        Fields: &models.IssueFieldsSchemeV2{},
+    }
+
+    // Check and add optional fields if provided
+    if summary, ok := arguments["summary"].(string); ok && summary != "" {
+        payload.Fields.Summary = summary
+    }
+
+    if description, ok := arguments["description"].(string); ok && description != "" {
+        payload.Fields.Description = description
+    }
+
+    if status, ok := arguments["status"].(string); ok && status != "" {
+        payload.Fields.Status = &models.StatusScheme{
+            Name: status,
+        }
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+    defer cancel()
+
+    response, err := client.Issue.Update(ctx, issueKey, true, payload, nil, nil)
+    if err != nil {
+        if response != nil {
+            return nil, fmt.Errorf("failed to update issue: %s (endpoint: %s)", response.Bytes.String(), response.Endpoint)
+        }
+        return nil, fmt.Errorf("failed to update issue: %v", err)
+    }
+
+    return mcp.NewToolResultText("Issue updated successfully!"), nil
+}
+
+func jiraCreateIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	client := services.JiraClient()
+
+	projectKey, ok := arguments["project_key"].(string)
+	if !ok {
+		return nil, fmt.Errorf("project_key argument is required")
+	}
+
+	summary, ok := arguments["summary"].(string)
+	if !ok {
+		return nil, fmt.Errorf("summary argument is required")
+	}
+
+	description, ok := arguments["description"].(string)
+	if !ok {
+		return nil, fmt.Errorf("description argument is required")
+	}
+
+	issueType, ok := arguments["issue_type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("issue_type argument is required")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	var payload = models.IssueSchemeV2{
+		Fields: &models.IssueFieldsSchemeV2{
+			Summary:   summary,
+			Project:   &models.ProjectScheme{Key: projectKey},
+			Description: description,
+			IssueType: &models.IssueTypeScheme{Name: issueType},
+		},
+	}
+
+	
+	issue, response, err := client.Issue.Create(ctx, &payload, nil)
+	if err != nil {
+		if response != nil {
+			return nil, fmt.Errorf("failed to create issue: %s (endpoint: %s)", response.Bytes.String(), response.Endpoint)
+		}
+		return nil, fmt.Errorf("failed to create issue: %v", err)
+	}
+
+	result := fmt.Sprintf("Issue created successfully!\nKey: %s\nID: %s\nURL: %s", issue.Key, issue.ID, issue.Self)
+	return mcp.NewToolResultText(result), nil
+}
+
+func jiraListSprintHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+
+    boardIDStr, ok := arguments["board_id"].(string)
+    if !ok {
+        return nil, fmt.Errorf("board_id argument is required")
+    }
+
+    boardID, err := strconv.Atoi(boardIDStr)
+    if err != nil {
+        return nil, fmt.Errorf("invalid board_id: %v", err)
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+    defer cancel()
+
+    sprints, response, err := services.AgileClient().Board.Sprints(ctx, boardID, 0, 50, []string{"active", "future"})
+    if err != nil {
+        if response != nil {
+            return nil, fmt.Errorf("failed to get sprints: %s (endpoint: %s)", response.Bytes.String(), response.Endpoint)
+        }
+        return nil, fmt.Errorf("failed to get sprints: %v", err)
+    }
+
+    if len(sprints.Values) == 0 {
+        return mcp.NewToolResultText("No sprints found for this board."), nil
+    }
+
+    var result string
+    for _, sprint := range sprints.Values {
+        result += fmt.Sprintf("ID: %d\nName: %s\nState: %s\nStartDate: %s\nEndDate: %s\n\n", sprint.ID, sprint.Name, sprint.State, sprint.StartDate, sprint.EndDate)
+    }
+
+    return mcp.NewToolResultText(result), nil
+}
+
+func jiraSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	client := services.JiraClient()
+
+	// Get search text from arguments
+	jql, ok := arguments["jql"].(string)
+	if !ok {
+		return nil, fmt.Errorf("jql argument is required")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	searchResult, response, err := client.Issue.Search.Get(ctx, jql, nil, nil, 0, 30, "")
+	if err != nil {
+		if response != nil {
+			return nil, fmt.Errorf("failed to search issues: %s (endpoint: %s)", response.Bytes.String(), response.Endpoint)
+		}
+		return nil, fmt.Errorf("failed to search issues: %v", err)
+	}
+
+	if len(searchResult.Issues) == 0 {
+		return mcp.NewToolResultText("No issues found matching the search criteria."), nil
+	}
+
+	var result string
+	for _, issue := range searchResult.Issues {
+		result += fmt.Sprintf("Key: %s\nSummary: %s\nStatus: %s\nCreated: %s\nUpdated: %s\nResolution date: %s\n\n", 
+			issue.Key, 
+			issue.Fields.Summary, 
+			issue.Fields.Status.Name,
+			issue.Fields.Created,
+			issue.Fields.Resolutiondate,
+			issue.Fields.Updated)
+	}
+
+	return mcp.NewToolResultText(result), nil
 }
 
 func jiraIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
@@ -57,6 +255,24 @@ func jiraIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResult, er
 		transitions += fmt.Sprintf("- %s (ID: %s)\n", transition.Name, transition.ID)
 	}
 
+	// Get reporter name, handling nil case
+	reporterName := "Unassigned"
+	if issue.Fields.Reporter != nil {
+		reporterName = issue.Fields.Reporter.DisplayName
+	}
+
+	// Get assignee name, handling nil case
+	assigneeName := "Unassigned" 
+	if issue.Fields.Assignee != nil {
+		assigneeName = issue.Fields.Assignee.DisplayName
+	}
+
+	// Get priority name, handling nil case
+	priorityName := "None"
+	if issue.Fields.Priority != nil {
+		priorityName = issue.Fields.Priority.Name
+	}
+
 	result := fmt.Sprintf(`
 Key: %s
 Summary: %s
@@ -74,11 +290,11 @@ Available Transitions:
 		issue.Key,
 		issue.Fields.Summary,
 		issue.Fields.Status.Name,
-		issue.Fields.Reporter.DisplayName,
-		issue.Fields.Assignee.DisplayName,
+		reporterName,
+		assigneeName, 
 		issue.Fields.Created,
 		issue.Fields.Updated,
-		issue.Fields.Priority.Name,
+		priorityName,
 		issue.Fields.Description,
 		subtasks,
 		transitions,

@@ -4,6 +4,11 @@ A powerful Model Context Protocol (MCP) server implementation with integrations 
 
 [Tutorial](https://www.youtube.com/watch?v=XnDFtYKU6xU)
 
+## Community
+
+For community support, discussions, and updates, please visit our forum at [community.aiocean.io](https://community.aiocean.io/).
+
+
 ## Prerequisites
 
 - Go 1.23.2 or higher
@@ -25,20 +30,19 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
       "command": "all-in-one-model-context-protocol",
       "args": [],
       "env": {
-        "ENABLE_TOOLS": "rag,gemini,fetch,confluence,youtube,jira,gitlab,script",
-        "ATLASSIAN_TOKEN": "",
-        "PROXY_URL": "",
+        "GITLAB_TOKEN": "",
+        "QDRANT_API_KEY": "",
+        "BRAVE_API_KEY": "",
         "OPENAI_API_KEY": "",
         "GOOGLE_AI_API_KEY": "",
         "GITLAB_HOST": "",
-        "QDRANT_HOST": "",
-        "QDRANT_PORT": "",
         "ENABLE_TOOLS": "",
-        "BRAVE_API_KEY": "",
+        "ATLASSIAN_HOST": "",
         "ATLASSIAN_EMAIL": "",
-        "GITLAB_TOKEN": "",
-        "QDRANT_API_KEY": "",
-        "ATLASSIAN_HOST": ""
+        "ATLASSIAN_TOKEN": "",
+        "PROXY_URL": "",
+        "QDRANT_HOST": "",
+        "QDRANT_PORT": ""
       }
     }
   }
@@ -61,16 +65,6 @@ Here is the list of tools group:
 - `rag`: RAG tools
 
 ## Available Tools
-
-### execute_comand_line_script
-
-Execute a script file on user machine. Non interactive. Do not do unsafe operations
-
-Arguments:
-
-- `content` (String) (Required): 
-- `interpreter` (String) (Default: /bin/sh): Script interpreter (e.g., /bin/sh, /bin/bash, python, etc.)
-- `working_dir` (String): Working directory for script execution
 
 ### confluence_search
 
@@ -215,6 +209,44 @@ Arguments:
 
 - `issue_key` (String) (Required): Jira issue key (e.g., KP-2)
 
+### search_jira_issue
+
+Search/list for Jira issues by JQL
+
+Arguments:
+
+- `jql` (String) (Required): JQL query to search/list for Jira issues
+
+### list_jira_sprints
+
+List all sprints in a Jira project
+
+Arguments:
+
+- `board_id` (String) (Required): Jira board ID
+
+### create_jira_issue
+
+Create a new Jira issue
+
+Arguments:
+
+- `project_key` (String) (Required): Jira project key (e.g., KP)
+- `summary` (String) (Required): Summary of the issue
+- `description` (String) (Required): Description of the issue
+- `issue_type` (String) (Required): Type of the issue (e.g., Bug, Task)
+
+### update_jira_issue
+
+Update an existing Jira issue
+
+Arguments:
+
+- `issue_key` (String) (Required): Jira issue key (e.g., KP-2)
+- `summary` (String): New summary of the issue
+- `description` (String): New description of the issue
+- `status` (String): New status of the issue
+
 ### RAG_memory_index_content
 
 Index a note into memory, can be inserted or updated
@@ -261,7 +293,7 @@ Search for notes in a collection based on a query
 Arguments:
 
 - `collection` (String) (Required): Memory collection name
-- `query` (String) (Required): Search query
+- `query` (String) (Required): Search term, should be a keyword or a phrase
 
 ### RAG_memory_delete_index_by_filepath
 
@@ -271,6 +303,16 @@ Arguments:
 
 - `collection` (String) (Required): Memory collection name
 - `filePath` (String) (Required): Path to the local file to be deleted
+
+### execute_comand_line_script
+
+Execute a script file on user machine. Non interactive. Do not do unsafe operations
+
+Arguments:
+
+- `content` (String) (Required): 
+- `interpreter` (String) (Default: /bin/sh): Script interpreter (e.g., /bin/sh, /bin/bash, python, etc.)
+- `working_dir` (String): Working directory for script execution
 
 ### web_search
 
