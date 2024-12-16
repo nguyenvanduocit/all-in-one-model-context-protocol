@@ -30,19 +30,21 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
       "command": "all-in-one-model-context-protocol",
       "args": [],
       "env": {
-        "GITLAB_TOKEN": "",
-        "QDRANT_API_KEY": "",
-        "BRAVE_API_KEY": "",
         "OPENAI_API_KEY": "",
         "GOOGLE_AI_API_KEY": "",
         "GITLAB_HOST": "",
+        "QDRANT_PORT": "",
         "ENABLE_TOOLS": "",
-        "ATLASSIAN_HOST": "",
         "ATLASSIAN_EMAIL": "",
         "ATLASSIAN_TOKEN": "",
         "PROXY_URL": "",
+        "GOOGLE_TOKEN_FILE": "",
+        "GOOGLE_CREDENTIALS_FILE": "",
         "QDRANT_HOST": "",
-        "QDRANT_PORT": ""
+        "QDRANT_API_KEY": "",
+        "ATLASSIAN_HOST": "",
+        "GITLAB_TOKEN": "",
+        "BRAVE_API_KEY": ""
       }
     }
   }
@@ -200,6 +202,66 @@ List all users in a GitLab group
 Arguments:
 
 - `group_id` (String) (Required): GitLab group ID
+
+### gitlab_create_mr
+
+Create a new merge request
+
+Arguments:
+
+- `project_id` (String) (Required): Project ID or path
+- `source_branch` (String) (Required): Source branch name
+- `target_branch` (String) (Required): Target branch name
+- `title` (String) (Required): Merge request title
+- `description` (String): Merge request description
+
+### gmail_search
+
+Search emails in Gmail using Gmail's search syntax
+
+Arguments:
+
+- `query` (String) (Required): Gmail search query. Follow Gmail's search syntax
+
+### gmail_move_to_spam
+
+Move specific emails to spam folder in Gmail by message IDs
+
+Arguments:
+
+- `message_ids` (String) (Required): Comma-separated list of message IDs to move to spam
+
+### gmail_create_filter
+
+Create a Gmail filter with specified criteria and actions
+
+Arguments:
+
+- `from` (String): Filter emails from this sender
+- `to` (String): Filter emails to this recipient
+- `subject` (String): Filter emails with this subject
+- `query` (String): Additional search query criteria
+- `add_label` (Boolean): Add label to matching messages
+- `label_name` (String): Name of the label to add (required if add_label is true)
+- `mark_important` (Boolean): Mark matching messages as important
+- `mark_read` (Boolean): Mark matching messages as read
+- `archive` (Boolean): Archive matching messages
+
+### gmail_list_filters
+
+List all Gmail filters in the account
+
+### gmail_list_labels
+
+List all Gmail labels in the account
+
+### gmail_delete_filter
+
+Delete a Gmail filter by its ID
+
+Arguments:
+
+- `filter_id` (String) (Required): The ID of the filter to delete
 
 ### get_jira_issue
 
