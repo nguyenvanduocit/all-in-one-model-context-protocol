@@ -30,21 +30,21 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
       "command": "all-in-one-model-context-protocol",
       "args": [],
       "env": {
-        "OPENAI_API_KEY": "",
-        "GOOGLE_AI_API_KEY": "",
-        "GITLAB_HOST": "",
-        "QDRANT_PORT": "",
-        "ENABLE_TOOLS": "",
+        "QDRANT_HOST": "",
+        "ATLASSIAN_HOST": "",
         "ATLASSIAN_EMAIL": "",
+        "GITLAB_HOST": "",
+        "GITLAB_TOKEN": "",
+        "BRAVE_API_KEY": "",
+        "ENABLE_TOOLS": "Check environment variable first for backward compatibility",
         "ATLASSIAN_TOKEN": "",
+        "GOOGLE_AI_API_KEY": "",
         "PROXY_URL": "",
+        "OPENAI_API_KEY": "",
+        "QDRANT_PORT": "",
         "GOOGLE_TOKEN_FILE": "",
         "GOOGLE_CREDENTIALS_FILE": "",
-        "QDRANT_HOST": "",
-        "QDRANT_API_KEY": "",
-        "ATLASSIAN_HOST": "",
-        "GITLAB_TOKEN": "",
-        "BRAVE_API_KEY": ""
+        "QDRANT_API_KEY": ""
       }
     }
   }
@@ -53,7 +53,8 @@ go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
 
 ## Enable Tools
 
-- `ENABLE_TOOLS`: Comma separated list of tools group to enable. If not set, all tools will be enabled.
+There are a hidden variable `ENABLE_TOOLS` in the environment variable. It is a comma separated list of tools group to enable. If not set, all tools will be enabled. Leave it empty to enable all tools.
+
 
 Here is the list of tools group:
 
@@ -68,6 +69,50 @@ Here is the list of tools group:
 
 ## Available Tools
 
+### calendar_create_event
+
+Create a new event in Google Calendar
+
+Arguments:
+
+- `summary` (String) (Required): Title of the event
+- `description` (String): Description of the event
+- `start_time` (String) (Required): Start time of the event in RFC3339 format (e.g., 2023-12-25T09:00:00Z)
+- `end_time` (String) (Required): End time of the event in RFC3339 format
+- `attendees` (String): Comma-separated list of attendee email addresses
+
+### calendar_list_events
+
+List upcoming events in Google Calendar
+
+Arguments:
+
+- `time_min` (String): Start time for the search in RFC3339 format (default: now)
+- `time_max` (String): End time for the search in RFC3339 format (default: 1 week from now)
+- `max_results` (Number): Maximum number of events to return (default: 10)
+
+### calendar_update_event
+
+Update an existing event in Google Calendar
+
+Arguments:
+
+- `event_id` (String) (Required): ID of the event to update
+- `summary` (String): New title of the event
+- `description` (String): New description of the event
+- `start_time` (String): New start time of the event in RFC3339 format
+- `end_time` (String): New end time of the event in RFC3339 format
+- `attendees` (String): Comma-separated list of new attendee email addresses
+
+### calendar_respond_to_event
+
+Respond to an event invitation in Google Calendar
+
+Arguments:
+
+- `event_id` (String) (Required): ID of the event to respond to
+- `response` (String) (Required): Your response (accepted, declined, or tentative)
+
 ### confluence_search
 
 Search Confluence
@@ -76,7 +121,7 @@ Arguments:
 
 - `query` (String) (Required): Atlassian Confluence Query Language (CQL)
 
-### get_confluence_page
+### confluence_get_page
 
 Get Confluence page content
 
@@ -263,7 +308,15 @@ Arguments:
 
 - `filter_id` (String) (Required): The ID of the filter to delete
 
-### get_jira_issue
+### gmail_delete_label
+
+Delete a Gmail label by its ID
+
+Arguments:
+
+- `label_id` (String) (Required): The ID of the label to delete
+
+### jira_get_issue
 
 Get Jira issue details
 
@@ -271,7 +324,7 @@ Arguments:
 
 - `issue_key` (String) (Required): Jira issue key (e.g., KP-2)
 
-### search_jira_issue
+### jira_search_issue
 
 Search/list for Jira issues by JQL
 
@@ -279,7 +332,7 @@ Arguments:
 
 - `jql` (String) (Required): JQL query to search/list for Jira issues
 
-### list_jira_sprints
+### jira_list_sprints
 
 List all sprints in a Jira project
 
@@ -287,7 +340,7 @@ Arguments:
 
 - `board_id` (String) (Required): Jira board ID
 
-### create_jira_issue
+### jira_create_issue
 
 Create a new Jira issue
 
@@ -298,7 +351,7 @@ Arguments:
 - `description` (String) (Required): Description of the issue
 - `issue_type` (String) (Required): Type of the issue (e.g., Bug, Task)
 
-### update_jira_issue
+### jira_update_issue
 
 Update an existing Jira issue
 

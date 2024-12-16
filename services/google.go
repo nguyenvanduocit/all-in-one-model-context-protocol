@@ -12,6 +12,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/calendar/v3"
 	"google.golang.org/api/gmail/v1"
+	"google.golang.org/api/youtube/v3"
 )
 
 // Retrieves a token from a local file.
@@ -34,6 +35,11 @@ func ListGoogleScopes() []string {
 		gmail.GmailSettingsBasicScope,
 		calendar.CalendarScope,
 		calendar.CalendarEventsScope,
+		youtube.YoutubeScope,
+		youtube.YoutubeUploadScope,
+		youtube.YoutubepartnerChannelAuditScope,
+		youtube.YoutubepartnerScope,
+		youtube.YoutubeReadonlyScope,
 	}
 }
 

@@ -26,9 +26,7 @@ const (
 func RegisterYouTubeTool(s *server.MCPServer) {
 	tool := mcp.NewTool("youtube_transcript",
 		mcp.WithDescription("Get YouTube video transcript"),
-		mcp.WithString("url", mcp.Required(), mcp.Description("YouTube video URL")),
-		mcp.WithString("lang", mcp.DefaultString("en"), mcp.Description("Language code (default: en)")),
-		mcp.WithString("country", mcp.DefaultString("US"), mcp.Description("Country code (default: US)")),
+		mcp.WithString("video_id", mcp.Required(), mcp.Description("YouTube video ID")),
 	)
 
 	s.AddTool(tool, util.ErrorGuard(youtubeTranscriptHandler))
@@ -36,19 +34,13 @@ func RegisterYouTubeTool(s *server.MCPServer) {
 
 func youtubeTranscriptHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
 	// Get URL from arguments
-	videoURL, ok := arguments["url"].(string)
+	videoID, ok := arguments["video_id"].(string)
 	if !ok {
-		return nil, fmt.Errorf("url argument is required")
-	}
-
-	// Get language from arguments (optional)
-	lang := "en"
-	if value, ok := arguments["lang"]; ok {
-		lang = value.(string)
+		return nil, fmt.Errorf("video_id argument is required")
 	}
 
 	// Fetch transcript
-	transcripts, videoTitle, err := FetchTranscript(videoURL, &TranscriptConfig{Lang: lang})
+	transcripts, videoTitle, err := FetchTranscript(videoID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch transcript: %v", err)
 	}
@@ -80,11 +72,6 @@ func (e *YoutubeTranscriptError) Error() string {
 	return fmt.Sprintf("[YoutubeTranscript] 🚨 %s", e.Message)
 }
 
-// Types for transcript handling
-type TranscriptConfig struct {
-	Lang string
-}
-
 type TranscriptResponse struct {
 	Text     string
 	Duration float64
@@ -94,7 +81,7 @@ type TranscriptResponse struct {
 
 
 // FetchTranscript retrieves the transcript for a YouTube video
-func FetchTranscript(videoId string, config *TranscriptConfig) ([]TranscriptResponse, string, error) {
+func FetchTranscript(videoId string) ([]TranscriptResponse, string, error) {
 	identifier, err := retrieveVideoId(videoId)
 	if err != nil {
 		return nil, "", err
@@ -152,28 +139,7 @@ func FetchTranscript(videoId string, config *TranscriptConfig) ([]TranscriptResp
 		return nil, "", &YoutubeTranscriptError{Message: fmt.Sprintf("No transcripts are available for this video (%s)", videoId)}
 	}
 
-	var transcriptURL string
-	if config != nil && config.Lang != "" {
-		// Try to find the requested language
-		for _, track := range captions.PlayerCaptionsTracklistRenderer.CaptionTracks {
-			if track.LanguageCode == config.Lang {
-				transcriptURL = track.BaseURL
-				break
-			}
-		}
-		
-		// If requested language not found, fall back to first available language
-		if transcriptURL == "" {
-			transcriptURL = captions.PlayerCaptionsTracklistRenderer.CaptionTracks[0].BaseURL
-			// Update the config language to match what we're actually using
-			config.Lang = captions.PlayerCaptionsTracklistRenderer.CaptionTracks[0].LanguageCode
-		}
-	} else {
-		transcriptURL = captions.PlayerCaptionsTracklistRenderer.CaptionTracks[0].BaseURL
-		if config != nil {
-			config.Lang = captions.PlayerCaptionsTracklistRenderer.CaptionTracks[0].LanguageCode
-		}
-	}
+	transcriptURL := captions.PlayerCaptionsTracklistRenderer.CaptionTracks[0].BaseURL
 
 	transcriptResponse, err := services.DefaultHttpClient().Get(transcriptURL)
 	if err != nil {
@@ -196,7 +162,7 @@ func FetchTranscript(videoId string, config *TranscriptConfig) ([]TranscriptResp
 			Text:     match[3],
 			Duration: duration,
 			Offset:   offset,
-			Lang:     config.Lang,
+			Lang:     captions.PlayerCaptionsTracklistRenderer.CaptionTracks[0].LanguageCode,
 		})
 	}
 
