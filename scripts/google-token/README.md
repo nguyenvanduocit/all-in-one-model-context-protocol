@@ -2,7 +2,9 @@ Here's the English translation of the README.md:
 
 # Guide to Getting token.json from Google API
 
-## 0. Create a project on Google Cloud Platform
+You can follow the steps below or just ask Claude how to do it, I prefer the last one.
+
+## 1. Create a project on Google Cloud Platform
 
 1. Access Google Cloud Console (https://console.cloud.google.com/)
 2. Sign in with your Google account
@@ -33,12 +35,6 @@ Here's the English translation of the README.md:
    - Click "Save and Continue"
    - Add test users if needed
    - Click "Save and Continue"
-
-## 1. Preparation
-
-1. Ensure Go is installed on your computer
-2. Create a new directory for the project
-3. Copy `main.go` file into the project directory
 
 ## 2. Get credentials.json
 
