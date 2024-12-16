@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.6.0...v1.7.0) (2024-12-16)
+
+
+### Features
+
+* integrate Gmail tools for email management; add functionalities for searching, moving to spam, creating filters, and listing labels; implement Google API token handling and update README for usage instructions ([b119be3](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/b119be319b42954ab81e0010cd1ea8460ff255f7))
+
 ## [1.6.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.5.0...v1.6.0) (2024-12-16)
 
 
