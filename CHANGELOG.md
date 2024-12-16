@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.5.0...v1.6.0) (2024-12-16)
+
+
+### Features
+
+* add GitLab tool for creating merge requests; implement createMergeRequestHandler to handle request creation with optional description and detailed success response ([bb32fe1](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/bb32fe134aa24d03fdf7241dad041ec29cd6174b))
+
 ## [1.5.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.4.1...v1.5.0) (2024-12-16)
 
 
