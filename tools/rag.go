@@ -80,7 +80,7 @@ func RegisterRagTools(s *server.MCPServer) {
 	searchTool := mcp.NewTool("RAG_memory_search",
 		mcp.WithDescription("Search for memory in a collection based on a query"),
 		mcp.WithString("collection", mcp.Required(), mcp.Description("Memory collection name")),
-		mcp.WithString("query", mcp.Required(), mcp.Description("Search term, should be a keyword or a phrase")),
+		mcp.WithString("query", mcp.Required(), mcp.Description("search query, should be a keyword")),
 	)
 
 	deleteIndexByFilePathTool := mcp.NewTool("RAG_memory_delete_index_by_filepath",

@@ -87,6 +87,9 @@ func scriptExecuteHandler(arguments map[string]interface{}) (*mcp.CallToolResult
 		cmd.Dir = workingDir
 	}
 
+	// Inject environment variables from the OS
+	cmd.Env = os.Environ()
+
 	// Create buffers for stdout and stderr
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
