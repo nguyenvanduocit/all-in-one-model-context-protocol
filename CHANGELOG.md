@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.8.0...v1.9.0) (2024-12-17)
+
+
+### Features
+
+* support youtube ([18db685](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/18db68551d6a9192959527062d5f2e6861fafe34))
+
 ## [1.8.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.7.0...v1.8.0) (2024-12-16)
 
 
