@@ -45,44 +45,44 @@ func RegisterGitLabTool(s *server.MCPServer) {
 
 	projectTool := mcp.NewTool("gitlab_get_project",
 		mcp.WithDescription("Get GitLab project details"),
-		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 	)
 
 	mrListTool := mcp.NewTool("gitlab_list_mrs",
 		mcp.WithDescription("List merge requests"),
-		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 		mcp.WithString("state", mcp.DefaultString("all"), mcp.Description("MR state (opened/closed/merged)")),
 	)
 
 	mrDetailsTool := mcp.NewTool("gitlab_get_mr_details",
 		mcp.WithDescription("Get merge request details"),
-		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 		mcp.WithString("mr_iid", mcp.Required(), mcp.Description("Merge request IID")),
 	)
 
 	mrCommentTool := mcp.NewTool("gitlab_create_MR_note",
 		mcp.WithDescription("Create a note on a merge request"),
-		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 		mcp.WithString("mr_iid", mcp.Required(), mcp.Description("Merge request IID")),
 		mcp.WithString("comment", mcp.Required(), mcp.Description("Comment text")),
 	)
 
 	fileContentTool := mcp.NewTool("gitlab_get_file_content",
 		mcp.WithDescription("Get file content from a GitLab repository"),
-		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 		mcp.WithString("file_path", mcp.Required(), mcp.Description("Path to the file in the repository")),
 		mcp.WithString("ref", mcp.DefaultString("develop"), mcp.Description("Branch name, tag, or commit SHA")),
 	)
 
 	pipelineTool := mcp.NewTool("gitlab_list_pipelines",
 		mcp.WithDescription("List pipelines for a GitLab project"),
-		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 		mcp.WithString("status", mcp.DefaultString("all"), mcp.Description("Pipeline status (running/pending/success/failed/canceled/skipped/all)")),
 	)
 
 	commitsTool := mcp.NewTool("gitlab_list_commits",
 		mcp.WithDescription("List commits in a GitLab project within a date range"),
-		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 		mcp.WithString("since", mcp.Required(), mcp.Description("Start date (YYYY-MM-DD)")),
 		mcp.WithString("until", mcp.Required(), mcp.Description("End date (YYYY-MM-DD)")),
 		mcp.WithString("ref", mcp.DefaultString("develop"), mcp.Description("Branch name, tag, or commit SHA")),
@@ -90,7 +90,7 @@ func RegisterGitLabTool(s *server.MCPServer) {
 
 	commitDetailsTool := mcp.NewTool("gitlab_get_commit_details",
 		mcp.WithDescription("Get details of a commit"),
-		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 		mcp.WithString("commit_sha", mcp.Required(), mcp.Description("Commit SHA")),
 	)
 
@@ -108,7 +108,7 @@ func RegisterGitLabTool(s *server.MCPServer) {
 
 	createMRTool := mcp.NewTool("gitlab_create_mr",
 		mcp.WithDescription("Create a new merge request"),
-		mcp.WithString("project_id", mcp.Required(), mcp.Description("Project ID or path")),
+		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 		mcp.WithString("source_branch", mcp.Required(), mcp.Description("Source branch name")),
 		mcp.WithString("target_branch", mcp.Required(), mcp.Description("Target branch name")),
 		mcp.WithString("title", mcp.Required(), mcp.Description("Merge request title")),
@@ -134,8 +134,8 @@ func listProjectsHandler(arguments map[string]interface{}) (*mcp.CallToolResult,
 
 	opt := &gitlab.ListGroupProjectsOptions{
 		Archived: gitlab.Ptr(false),
-		OrderBy: gitlab.Ptr("last_activity_at"),
-		Sort: gitlab.Ptr("desc"),
+		OrderBy:  gitlab.Ptr("last_activity_at"),
+		Sort:     gitlab.Ptr("desc"),
 		ListOptions: gitlab.ListOptions{
 			PerPage: 100,
 		},
@@ -160,8 +160,7 @@ func listProjectsHandler(arguments map[string]interface{}) (*mcp.CallToolResult,
 }
 
 func getProjectHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	projectID := arguments["project_id"].(string)
-
+	projectID := arguments["project_path"].(string)
 
 	// Get project details
 	project, _, err := gitlabClient().Projects.GetProject(projectID, nil)
@@ -202,8 +201,8 @@ func getProjectHandler(arguments map[string]interface{}) (*mcp.CallToolResult, e
 }
 
 func listMergeRequestsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	projectID := arguments["project_id"].(string)
-	
+	projectID := arguments["project_path"].(string)
+
 	state := "all"
 	if value, ok := arguments["state"]; ok {
 		state = value.(string)
@@ -222,9 +221,9 @@ func listMergeRequestsHandler(arguments map[string]interface{}) (*mcp.CallToolRe
 	}
 	var result strings.Builder
 	for _, mr := range mrs {
-		result.WriteString(fmt.Sprintf("MR #%d: %s\nState: %s\nAuthor: %s\nURL: %s\nCreated: %s\n", 
+		result.WriteString(fmt.Sprintf("MR #%d: %s\nState: %s\nAuthor: %s\nURL: %s\nCreated: %s\n",
 			mr.IID, mr.Title, mr.State, mr.Author.Username, mr.WebURL, mr.CreatedAt.Format("2006-01-02 15:04:05")))
-		
+
 		if mr.SourceBranch != "" {
 			result.WriteString(fmt.Sprintf("Source Branch: %s\n", mr.SourceBranch))
 		}
@@ -274,7 +273,7 @@ func listMergeRequestsHandler(arguments map[string]interface{}) (*mcp.CallToolRe
 }
 
 func getMergeRequestHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	projectID := arguments["project_id"].(string)
+	projectID := arguments["project_path"].(string)
 	mrIIDStr := arguments["mr_iid"].(string)
 
 	mrIID, err := strconv.Atoi(mrIIDStr)
@@ -346,7 +345,7 @@ func getMergeRequestHandler(arguments map[string]interface{}) (*mcp.CallToolResu
 }
 
 func commentOnMergeRequestHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	projectID := arguments["project_id"].(string)
+	projectID := arguments["project_path"].(string)
 	mrIIDStr := arguments["mr_iid"].(string)
 	comment := arguments["comment"].(string)
 
@@ -371,7 +370,7 @@ func commentOnMergeRequestHandler(arguments map[string]interface{}) (*mcp.CallTo
 }
 
 func getFileContentHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	projectID := arguments["project_id"].(string)
+	projectID := arguments["project_path"].(string)
 	filePath := arguments["file_path"].(string)
 
 	ref := "develop"
@@ -399,7 +398,7 @@ func getFileContentHandler(arguments map[string]interface{}) (*mcp.CallToolResul
 }
 
 func listPipelinesHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	projectID := arguments["project_id"].(string)
+	projectID := arguments["project_path"].(string)
 	status := arguments["status"].(string)
 
 	opt := &gitlab.ListProjectPipelinesOptions{}
@@ -428,7 +427,7 @@ func listPipelinesHandler(arguments map[string]interface{}) (*mcp.CallToolResult
 }
 
 func listCommitsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	projectID := arguments["project_id"].(string)
+	projectID := arguments["project_path"].(string)
 	since, ok := arguments["since"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing required argument: since")
@@ -455,8 +454,8 @@ func listCommitsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, 
 	}
 
 	opt := &gitlab.ListCommitsOptions{
-		Since: gitlab.Ptr(sinceTime),
-		Until: gitlab.Ptr(untilTime),
+		Since:   gitlab.Ptr(sinceTime),
+		Until:   gitlab.Ptr(untilTime),
 		RefName: gitlab.Ptr(ref),
 	}
 
@@ -466,7 +465,7 @@ func listCommitsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, 
 	}
 
 	var result strings.Builder
-	result.WriteString(fmt.Sprintf("Commits for project %s between %s and %s (ref: %s):\n\n", 
+	result.WriteString(fmt.Sprintf("Commits for project %s between %s and %s (ref: %s):\n\n",
 		projectID, since, until, ref))
 
 	for _, commit := range commits {
@@ -487,9 +486,8 @@ func listCommitsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, 
 	return mcp.NewToolResultText(result.String()), nil
 }
 
-
 func getCommitDetailsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	projectID := arguments["project_id"].(string)
+	projectID := arguments["project_path"].(string)
 	commitSHA := arguments["commit_sha"].(string)
 
 	commit, _, err := gitlabClient().Commits.GetCommit(projectID, commitSHA, nil)
@@ -574,7 +572,6 @@ func listUserEventsHandler(arguments map[string]interface{}) (*mcp.CallToolResul
 		return nil, fmt.Errorf("invalid until date: %v", err)
 	}
 
-
 	opt := &gitlab.ListContributionEventsOptions{
 		After:  gitlab.Ptr(gitlab.ISOTime(sinceTime)),
 		Before: gitlab.Ptr(gitlab.ISOTime(untilTime)),
@@ -589,13 +586,13 @@ func listUserEventsHandler(arguments map[string]interface{}) (*mcp.CallToolResul
 	}
 
 	var result strings.Builder
-	result.WriteString(fmt.Sprintf("Events for user %s between %s and %s:\n\n", 
+	result.WriteString(fmt.Sprintf("Events for user %s between %s and %s:\n\n",
 		username, since, until))
 
 	for _, event := range events {
 		result.WriteString(fmt.Sprintf("Date: %s\n", event.CreatedAt.Format("2006-01-02 15:04:05")))
 		result.WriteString(fmt.Sprintf("Action: %s\n", event.ActionName))
-		
+
 		if event.PushData.CommitCount != 0 {
 			result.WriteString(fmt.Sprintf("Ref: %s\n", event.PushData.Ref))
 			result.WriteString(fmt.Sprintf("Commit Count: %d\n", event.PushData.CommitCount))
@@ -604,8 +601,6 @@ func listUserEventsHandler(arguments map[string]interface{}) (*mcp.CallToolResul
 			result.WriteString(fmt.Sprintf("Commit To: %s\n", event.PushData.CommitTo))
 		}
 
-		
-
 		if len(event.TargetType) > 0 {
 			result.WriteString(fmt.Sprintf("Target Type: %s\n", event.TargetType))
 		}
@@ -613,7 +608,6 @@ func listUserEventsHandler(arguments map[string]interface{}) (*mcp.CallToolResul
 		if event.TargetIID != 0 {
 			result.WriteString(fmt.Sprintf("Target IID: %d\n", event.TargetIID))
 		}
-		
 
 		if event.ProjectID != 0 {
 			result.WriteString(fmt.Sprintf("Project ID: %d\n", event.ProjectID))
@@ -676,7 +670,7 @@ func getAccessLevelString(level gitlab.AccessLevelValue) string {
 }
 
 func createMergeRequestHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-	projectID := arguments["project_id"].(string)
+	projectID := arguments["project_path"].(string)
 	sourceBranch := arguments["source_branch"].(string)
 	targetBranch := arguments["target_branch"].(string)
 	title := arguments["title"].(string)
