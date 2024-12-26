@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.9.0...v1.10.0) (2024-12-26)
+
+
+### Features
+
+* enhance fetch and Jira tools with improved descriptions and functionality ([c0301cd](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/c0301cd7a774385eb8407a4605f022ad0657c9a2))
+* implement local HTTP server for OAuth2 token retrieval in Google token script ([7887f18](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/7887f18c8cb450189e21124f8ba7f0e49d6fc50b))
+
 ## [1.9.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.8.0...v1.9.0) (2024-12-17)
 
 
