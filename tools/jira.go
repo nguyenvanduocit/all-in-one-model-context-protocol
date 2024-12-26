@@ -16,39 +16,41 @@ import (
 
 // RegisterJiraTool registers the Jira tools to the server
 func RegisterJiraTool(s *server.MCPServer) {
-	// Add Jira tool
+	// Get issue details tool
 	jiraTool := mcp.NewTool("jira_get_issue",
-		mcp.WithDescription("Get Jira issue details"),
-		mcp.WithString("issue_key", mcp.Required(), mcp.Description("Jira issue key (e.g., KP-2)")),
+		mcp.WithDescription("Retrieve detailed information about a specific Jira issue including its status, assignee, description, subtasks, and available transitions"),
+		mcp.WithString("issue_key", mcp.Required(), mcp.Description("The unique identifier of the Jira issue (e.g., KP-2, PROJ-123)")),
 	)
 
-	// Add Jira search tool
+	// Search issues tool
 	jiraSearchTool := mcp.NewTool("jira_search_issue",
-		mcp.WithDescription("Search/list for Jira issues by JQL"),
-		mcp.WithString("jql", mcp.Required(), mcp.Description("JQL query to search/list for Jira issues")),
+		mcp.WithDescription("Search for Jira issues using JQL (Jira Query Language). Returns key details like summary, status, assignee, and priority for matching issues"),
+		mcp.WithString("jql", mcp.Required(), mcp.Description("JQL query string (e.g., 'project = KP AND status = \"In Progress\"')")),
 	)
 
-	 // Add Jira list sprint tool
-    jiraListSprintTool := mcp.NewTool("jira_list_sprints",
-        mcp.WithDescription("List all sprints in a Jira project"),
-        mcp.WithString("board_id", mcp.Required(), mcp.Description("Jira board ID")),
-    )
-
-		jiraCreateIssueTool := mcp.NewTool("jira_create_issue",
-		mcp.WithDescription("Create a new Jira issue"),
-		mcp.WithString("project_key", mcp.Required(), mcp.Description("Jira project key (e.g., KP)")),
-		mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the issue")),
-		mcp.WithString("description", mcp.Required(), mcp.Description("Description of the issue")),
-		mcp.WithString("issue_type", mcp.Required(), mcp.Description("Type of the issue (e.g., Bug, Task)")),
+	// List sprints tool
+	jiraListSprintTool := mcp.NewTool("jira_list_sprints",
+		mcp.WithDescription("List all active and future sprints for a specific Jira board, including sprint IDs, names, states, and dates"),
+		mcp.WithString("board_id", mcp.Required(), mcp.Description("Numeric ID of the Jira board (can be found in board URL)")),
 	)
 
+	// Create issue tool
+	jiraCreateIssueTool := mcp.NewTool("jira_create_issue",
+		mcp.WithDescription("Create a new Jira issue with specified details. Returns the created issue's key, ID, and URL"),
+		mcp.WithString("project_key", mcp.Required(), mcp.Description("Project identifier where the issue will be created (e.g., KP, PROJ)")),
+		mcp.WithString("summary", mcp.Required(), mcp.Description("Brief title or headline of the issue")),
+		mcp.WithString("description", mcp.Required(), mcp.Description("Detailed explanation of the issue")),
+		mcp.WithString("issue_type", mcp.Required(), mcp.Description("Type of issue to create (common types: Bug, Task, Story, Epic)")),
+	)
+
+	// Update issue tool
 	jiraUpdateIssueTool := mcp.NewTool("jira_update_issue",
-    mcp.WithDescription("Update an existing Jira issue"),
-    mcp.WithString("issue_key", mcp.Required(), mcp.Description("Jira issue key (e.g., KP-2)")),
-    mcp.WithString("summary", mcp.Description("New summary of the issue")),
-    mcp.WithString("description", mcp.Description("New description of the issue")),
-    mcp.WithString("status", mcp.Description("New status of the issue")),
-)
+		mcp.WithDescription("Modify an existing Jira issue's details. Supports partial updates - only specified fields will be changed"),
+		mcp.WithString("issue_key", mcp.Required(), mcp.Description("The unique identifier of the issue to update (e.g., KP-2)")),
+		mcp.WithString("summary", mcp.Description("New title for the issue (optional)")),
+		mcp.WithString("description", mcp.Description("New description for the issue (optional)")),
+		mcp.WithString("status", mcp.Description("New status for the issue (must match available transitions, optional)")),
+	)
 
 	s.AddTool(jiraTool, util.ErrorGuard(jiraIssueHandler))
 	s.AddTool(jiraSearchTool, util.ErrorGuard(jiraSearchHandler))

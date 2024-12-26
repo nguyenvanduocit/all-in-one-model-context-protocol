@@ -11,9 +11,12 @@ import (
 )
 
 func RegisterFetchTool(s *server.MCPServer) {
-	tool := mcp.NewTool("fetch_url",
-		mcp.WithDescription("Fetch/read a http URL and return the content"),
-		mcp.WithString("url", mcp.Required(), mcp.Description("URL to fetch")),
+	tool := mcp.NewTool("get_url_content",
+		mcp.WithDescription("Fetches content from a given HTTP/HTTPS URL. This tool allows you to retrieve text content from web pages, APIs, or any accessible HTTP endpoints. Returns the raw content as text."),
+		mcp.WithString("url", 
+			mcp.Required(), 
+			mcp.Description("The complete HTTP/HTTPS URL to fetch content from (e.g., https://example.com)"),
+		),
 	)
 
 	s.AddTool(tool, util.ErrorGuard(fetchHandler))
