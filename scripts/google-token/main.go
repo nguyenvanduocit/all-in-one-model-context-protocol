@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"strings"
 
 	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/services"
 	"golang.org/x/oauth2"
@@ -83,25 +82,63 @@ func getClient(config *oauth2.Config, tokenPath string) *http.Client {
 
 // Request a token from the web, then returns the retrieved token.
 func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
+	// Create a channel to receive the authorization code
+	codeChan := make(chan string)
+
+	// Start a local HTTP server to handle the redirect
+	http.HandleFunc("/oauth2/callback", func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Failed to parse form", http.StatusBadRequest)
+			return
+		}
+
+		code := r.Form.Get("code")
+		if code == "" {
+			http.Error(w, "Authorization code not found", http.StatusBadRequest)
+			return
+		}
+
+		// Send the code to the channel
+		codeChan <- code
+
+		// Inform the user that the process is complete
+		fmt.Fprintln(w, "<h1>Authentication successful!</h1><p>You can close this window.</p>")
+	})
+
+	// Determine the port for the local server
+	port := "8080"
+	redirectURL := fmt.Sprintf("http://localhost:%s/oauth2/callback", port)
+
+	// Update the configuration with the redirect URL
+	config.RedirectURL = redirectURL
+
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 	
 	// Open the URL in the default browser
 	err := openBrowser(authURL)
 	if err != nil {
 		log.Printf("Could not open browser automatically: %v", err)
+		fmt.Printf("Please open the following URL in your browser:\n\n%v\n\n", authURL)
+	} else {
+		fmt.Println("Opening your browser to authenticate...")
 	}
 
-	fmt.Printf("\nIf the browser didn't open automatically, go to this link:\n\n%v\n\n"+
-		"After authorization, copy the redirected URL and paste it here: ", authURL)
+	// Start the HTTP server in a goroutine
+	server := &http.Server{Addr: ":" + port}
+	go func() {
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
 
-	var rediretedURL string
-	if _, err := fmt.Scan(&rediretedURL); err != nil {
-		log.Fatalf("Unable to read authorization code: %v", err)
+	// Wait for the authorization code
+	code := <-codeChan
+
+	// Shut down the server
+	if err := server.Shutdown(context.Background()); err != nil {
+		log.Printf("Failed to shut down server: %v", err)
 	}
-
-	// parse it to get the code
-	code := strings.Split(rediretedURL, "code=")[1]
-	code = strings.Split(code, "&")[0]
 
 	tok, err := config.Exchange(context.TODO(), code)
 	if err != nil {
