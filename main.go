@@ -1,33 +1,41 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"slices"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/prompts"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/resources"
 	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/tools"
 )
 
 func main() {
-	// Create MCP server
+	envFile := flag.String("env", ".env", "Path to environment file")
+	flag.Parse()
+
+	if err := godotenv.Load(*envFile); err != nil {
+		fmt.Printf("Warning: Error loading env file %s: %v\n", *envFile, err)
+	}
 	mcpServer := server.NewMCPServer(
 		"MyMCP",
 		"1.0.0",
 		server.WithLogging(),
+		server.WithPromptCapabilities(true),
+		server.WithResourceCapabilities(true, true),
 	)
 
-	// Check environment variable first for backward compatibility
 	enableTools := strings.Split(os.Getenv("ENABLE_TOOLS"), ",")
 	allToolsEnabled := len(enableTools) == 1 && enableTools[0] == ""
 
-	// Helper function to check if a tool should be enabled
 	isEnabled := func(toolName string) bool {
 		return allToolsEnabled || slices.Contains(enableTools, toolName)
 	}
 
-	// Register tools based on preferences
 	if isEnabled("gemini") {
 		tools.RegisterGeminiTool(mcpServer)
 	}
@@ -72,7 +80,10 @@ func main() {
 		tools.RegisterYouTubeChannelTools(mcpServer)
 	}
 
-	// Start the stdio server
+	prompts.RegisterCodeTools(mcpServer)
+
+	resources.RegisterJiraResource(mcpServer)
+
 	if err := server.ServeStdio(mcpServer); err != nil {
 		panic(fmt.Sprintf("Server error: %v", err))
 	}

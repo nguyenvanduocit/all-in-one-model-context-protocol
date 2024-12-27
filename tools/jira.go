@@ -17,10 +17,11 @@ import (
 // RegisterJiraTool registers the Jira tools to the server
 func RegisterJiraTool(s *server.MCPServer) {
 	// Get issue details tool
-	jiraTool := mcp.NewTool("jira_get_issue",
+	jiraGetIssueTool := mcp.NewTool("jira_get_issue",
 		mcp.WithDescription("Retrieve detailed information about a specific Jira issue including its status, assignee, description, subtasks, and available transitions"),
 		mcp.WithString("issue_key", mcp.Required(), mcp.Description("The unique identifier of the Jira issue (e.g., KP-2, PROJ-123)")),
 	)
+	s.AddTool(jiraGetIssueTool, util.ErrorGuard(jiraIssueHandler))
 
 	// Search issues tool
 	jiraSearchTool := mcp.NewTool("jira_search_issue",
@@ -52,7 +53,6 @@ func RegisterJiraTool(s *server.MCPServer) {
 		mcp.WithString("status", mcp.Description("New status for the issue (must match available transitions, optional)")),
 	)
 
-	s.AddTool(jiraTool, util.ErrorGuard(jiraIssueHandler))
 	s.AddTool(jiraSearchTool, util.ErrorGuard(jiraSearchHandler))
 	s.AddTool(jiraListSprintTool, util.ErrorGuard(jiraListSprintHandler))
 	s.AddTool(jiraCreateIssueTool, util.ErrorGuard(jiraCreateIssueHandler))
