@@ -53,16 +53,6 @@ QDRANT_API_KEY=
 }
 ```
 
-## Running the Server
-
-You can specify a custom environment file using the `-env` flag:
-
-```bash
-all-in-one-model-context-protocol -env /path/to/.env
-```
-
-If no env file is specified, it will look for `.env` in the current directory.
-
 ## Enable Tools
 
 There are a hidden variable `ENABLE_TOOLS` in the environment variable. It is a comma separated list of tools group to enable. If not set, all tools will be enabled. Leave it empty to enable all tools.
