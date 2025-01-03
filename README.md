@@ -21,35 +21,47 @@ For community support, discussions, and updates, please visit our forum at [comm
 go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
 ```
 
-2. Config your claude's config:
+2. Create a `.env` file with your configuration:
+```env
+QDRANT_HOST=
+ATLASSIAN_HOST=
+ATLASSIAN_EMAIL=
+GITLAB_HOST=
+GITLAB_TOKEN=
+BRAVE_API_KEY=
+ENABLE_TOOLS=
+ATLASSIAN_TOKEN=
+GOOGLE_AI_API_KEY=
+PROXY_URL=
+OPENAI_API_KEY=
+QDRANT_PORT=
+GOOGLE_TOKEN_FILE=
+GOOGLE_CREDENTIALS_FILE=
+QDRANT_API_KEY=
+```
+
+3. Config your claude's config:
 
 ```json{claude_desktop_config.json}
 {
   "mcpServers": {
     "my_mcp_server": {
       "command": "all-in-one-model-context-protocol",
-      "args": [],
-      "env": {
-        "QDRANT_HOST": "",
-        "ATLASSIAN_HOST": "",
-        "ATLASSIAN_EMAIL": "",
-        "GITLAB_HOST": "",
-        "GITLAB_TOKEN": "",
-        "BRAVE_API_KEY": "",
-        "ENABLE_TOOLS": "Check environment variable first for backward compatibility",
-        "ATLASSIAN_TOKEN": "",
-        "GOOGLE_AI_API_KEY": "",
-        "PROXY_URL": "",
-        "OPENAI_API_KEY": "",
-        "QDRANT_PORT": "",
-        "GOOGLE_TOKEN_FILE": "",
-        "GOOGLE_CREDENTIALS_FILE": "",
-        "QDRANT_API_KEY": ""
-      }
+      "args": ["-env", "/path/to/.env"],
     }
   }
 }
 ```
+
+## Running the Server
+
+You can specify a custom environment file using the `-env` flag:
+
+```bash
+all-in-one-model-context-protocol -env /path/to/.env
+```
+
+If no env file is specified, it will look for `.env` in the current directory.
 
 ## Enable Tools
 
@@ -131,7 +143,7 @@ Arguments:
 
 ### fetch_url
 
-Fetch/read a http URL and return the content
+Fetch/read a http URL and return the content (formerly get_url_content)
 
 Arguments:
 
