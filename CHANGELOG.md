@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.11.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.10.0...v1.11.0) (2025-01-03)
+
+
+### Features
+
+* add dotenv support and enhance tool registration ([c79e523](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/c79e523b4b80d402e0f8be2ee40f302e868b8719))
+
+
+### Bug Fixes
+
+* update environment variable flag and enhance README instructions ([2842e08](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/2842e0862074033e0adf3c07addaf28f55ba67e9))
+
 ## [1.10.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.9.0...v1.10.0) (2024-12-26)
 
 
