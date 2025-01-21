@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	envFile1 := flag.String("env", ".env", "Path to environment file")
+	envFile := flag.String("env", ".env", "Path to environment file")
 	flag.Parse()
 
 	if err := godotenv.Load(*envFile); err != nil {
@@ -28,6 +28,9 @@ func main() {
 		server.WithPromptCapabilities(true),
 		server.WithResourceCapabilities(true, true),
 	)
+
+	// Đăng ký tool manager với envFile từ flag
+	tools.RegisterToolManagerTool(mcpServer, *envFile)
 
 	enableTools := strings.Split(os.Getenv("ENABLE_TOOLS"), ",")
 	allToolsEnabled := len(enableTools) == 1 && enableTools[0] == ""
@@ -78,6 +81,10 @@ func main() {
 
 	if isEnabled("youtube_channel") {
 		tools.RegisterYouTubeChannelTools(mcpServer)
+	}
+
+	if isEnabled("sequential_thinking") {
+		tools.RegisterSequentialThinkingTool(mcpServer)
 	}
 
 	prompts.RegisterCodeTools(mcpServer)
