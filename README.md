@@ -1,7 +1,6 @@
 # MyMCP Server
 
 [![smithery badge](https://smithery.ai/badge/@nguyenvanduocit/all-in-one-model-context-protocol)](https://smithery.ai/server/@nguyenvanduocit/all-in-one-model-context-protocol)
-
 A powerful Model Context Protocol (MCP) server implementation with integrations for GitLab, Jira, Confluence, YouTube, and more. This server provides AI-powered search capabilities and various utility tools for development workflows.
 
 [Tutorial](https://www.youtube.com/watch?v=XnDFtYKU6xU)
@@ -17,14 +16,6 @@ For community support, discussions, and updates, please visit our forum at [comm
 - Various API keys and tokens for the services you want to use
 
 ## Installation
-
-### Installing via Smithery
-
-To install MyMCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@nguyenvanduocit/all-in-one-model-context-protocol):
-
-```bash
-npx -y @smithery/cli install @nguyenvanduocit/all-in-one-model-context-protocol --client claude
-```
 
 1. Install the server:
 ```bash
