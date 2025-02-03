@@ -52,7 +52,7 @@ func toolManagerHandler(arguments map[string]interface{}) (*mcp.CallToolResult, 
 			desc string
 		}{
 			{"tool_manager", "Tool management"},
-			{"gemini", "AI tools: web search and critical thinking"},
+			{"gemini", "AI tools: web search"},
 			{"fetch", "Web content fetching"},
 			{"confluence", "Confluence integration"},
 			{"youtube", "YouTube transcript"},
@@ -64,6 +64,7 @@ func toolManagerHandler(arguments map[string]interface{}) (*mcp.CallToolResult, 
 			{"calendar", "Google Calendar tools"},
 			{"youtube_channel", "YouTube channel tools"},
 			{"sequential_thinking", "Sequential thinking tool"},
+			{"deepseek", "Deepseek reasoning tool"},
 		}
 
 		for _, t := range tools {

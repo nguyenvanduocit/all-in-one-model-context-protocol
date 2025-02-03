@@ -43,6 +43,10 @@ func main() {
 		tools.RegisterGeminiTool(mcpServer)
 	}
 
+	if isEnabled("deepseek") {
+		tools.RegisterDeepseekTool(mcpServer)
+	}
+
 	if isEnabled("fetch") {
 		tools.RegisterFetchTool(mcpServer)
 	}
