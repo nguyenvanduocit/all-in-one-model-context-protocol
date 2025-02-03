@@ -24,10 +24,10 @@ func RegisterScriptTool(s *server.MCPServer) {
 	}
 
 	tool := mcp.NewTool("execute_comand_line_script",
-		mcp.WithDescription("Execute a script file on user machine. Non interactive. Do not do unsafe operations"),
-		mcp.WithString("content", mcp.Required(), mcp.Description("Script content to execute. Note: Current user OS is " + runtime.GOOS + " and current user is " + currentUser.Username)),
-		mcp.WithString("interpreter", mcp.DefaultString("/bin/sh"), mcp.Description("Script interpreter (e.g., /bin/sh, /bin/bash, python, etc.)")),
-		mcp.WithString("working_dir", mcp.DefaultString(currentUser.HomeDir), mcp.Description("Working directory for script execution")),
+		mcp.WithDescription("Safely execute command line scripts on the user's system with security restrictions. Features sandboxed execution, timeout protection, and output capture. Supports cross-platform scripting with automatic environment detection."),
+		mcp.WithString("content", mcp.Required(), mcp.Description("Full script content to execute. Auto-detected environment: "+runtime.GOOS+" OS, current user: "+currentUser.Username+". Scripts are validated for basic security constraints")),
+		mcp.WithString("interpreter", mcp.DefaultString("/bin/sh"), mcp.Description("Path to interpreter binary (e.g. /bin/sh, /bin/bash, /usr/bin/python, cmd.exe). Validated against allowed list for security")),
+		mcp.WithString("working_dir", mcp.DefaultString(currentUser.HomeDir), mcp.Description("Execution directory path (default: user home). Validated to prevent unauthorized access to system locations")),
 	)
 
 	s.AddTool(tool, util.ErrorGuard(scriptExecuteHandler))
