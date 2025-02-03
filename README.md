@@ -17,12 +17,24 @@ For community support, discussions, and updates, please visit our forum at [comm
 
 ## Installation
 
+### Installing via Smithery
+
+To install MyMCP Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@nguyenvanduocit/all-in-one-model-context-protocol) (will guide you through interactive CLI setup):
+
+```bash
+npx -y @smithery/cli install @nguyenvanduocit/all-in-one-model-context-protocol --client claude
+```
+
+*Note: Smithery will interactively prompt you for required configuration values and handle environment setup automatically*
+
+### Installing via Go
+
 1. Install the server:
 ```bash
 go install github.com/nguyenvanduocit/all-in-one-model-context-protocol@latest
 ```
 
-2. Create a `.env` file with your configuration:
+2. **Manual setup required** - Create a `.env` file with your configuration:
 ```env
 ENABLE_TOOLS=
 QDRANT_HOST=
@@ -35,6 +47,7 @@ ATLASSIAN_TOKEN=
 GOOGLE_AI_API_KEY=
 PROXY_URL=
 OPENAI_API_KEY=
+DEEPSEEK_API_KEY=
 QDRANT_PORT=
 GOOGLE_TOKEN_FILE=
 GOOGLE_CREDENTIALS_FILE=
@@ -69,6 +82,7 @@ Here is the list of tools group:
 - `gitlab`: GitLab tools
 - `script`: Script tools
 - `rag`: RAG tools
+- `deepseek`: Deepseek AI tools
 
 ## Available Tools
 
@@ -565,4 +579,14 @@ Arguments:
 
 - `channel_id` (String) (Required): ID of the channel to list videos for
 - `max_results` (Number) (Required): Maximum number of videos to return
+
+### deepseek_reasoning
+
+Advanced reasoning engine using Deepseek's AI capabilities for multi-step problem solving, critical analysis, and strategic decision support.
+
+Arguments:
+
+- `question` (String) (Required): The structured query or problem statement requiring deep analysis and reasoning
+- `context` (String) (Required): Defines the operational context and purpose of the query within the MCP ecosystem
+- `knowledge` (String): Provides relevant chat history, knowledge base entries, and structured data context for MCP-aware reasoning
 
