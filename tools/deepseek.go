@@ -18,7 +18,7 @@ func RegisterDeepseekTool(s *server.MCPServer) {
 		mcp.WithDescription("Deepseek-powered reasoning tool for complex problem solving and analysis"),
 		mcp.WithString("question", mcp.Required(), mcp.Description("The question or problem to analyze")),
 		mcp.WithString("context", mcp.Required(), mcp.Description("Context/purpose of the question, helps Deepseek to understand the problem better")),
-		mcp.WithString("chat_context_or_knowledge_base_summary", mcp.Description("Current chat history/knowledge base summary to inform the analysis")),
+		mcp.WithString("knowledge", mcp.Description("Current chat history/knowledge base/data, so that Deepseek can use it to answer the question")),
 	)
 
 	s.AddTool(reasoningTool, util.ErrorGuard(deepseekReasoningHandler))
