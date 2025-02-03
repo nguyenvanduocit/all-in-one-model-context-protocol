@@ -1,0 +1,65 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - braveApiKey
+      - gitlabHost
+      - gitlabToken
+      - atlassianHost
+      - atlassianEmail
+      - atlassianToken
+    properties:
+      enableTools:
+        type: string
+        description: Comma separated list of tools group to enable. Leave empty to
+          enable all tools.
+      qdrantHost:
+        type: string
+        description: Qdrant host URL
+      atlassianHost:
+        type: string
+        description: Atlassian host URL
+      atlassianEmail:
+        type: string
+        description: Email for Atlassian
+      gitlabHost:
+        type: string
+        description: GitLab host URL
+      gitlabToken:
+        type: string
+        description: Token for GitLab access
+      braveApiKey:
+        type: string
+        description: API key for Brave
+      atlassianToken:
+        type: string
+        description: Token for Atlassian access
+      googleAiApiKey:
+        type: string
+        description: API key for Google AI
+      proxyUrl:
+        type: string
+        description: Proxy URL if required
+      openaiApiKey:
+        type: string
+        description: API key for OpenAI
+      qdrantPort:
+        type: string
+        description: Port for Qdrant service
+      googleTokenFile:
+        type: string
+        description: Path to Google token file
+      googleCredentialsFile:
+        type: string
+        description: Path to Google credentials file
+      qdrantApiKey:
+        type: string
+        description: API key for Qdrant
+  commandFunction:
+    # A function that produces the CLI command to start the MCP on stdio.
+    |-
+    (config) => ({ command: './all-in-one-model-context-protocol', args: ['-env', '/path/to/.env'], env: { ENABLE_TOOLS: config.enableTools, QDRANT_HOST: config.qdrantHost, ATLASSIAN_HOST: config.atlassianHost, ATLASSIAN_EMAIL: config.atlassianEmail, GITLAB_HOST: config.gitlabHost, GITLAB_TOKEN: config.gitlabToken, BRAVE_API_KEY: config.braveApiKey, ATLASSIAN_TOKEN: config.atlassianToken, GOOGLE_AI_API_KEY: config.googleAiApiKey, PROXY_URL: config.proxyUrl, OPENAI_API_KEY: config.openaiApiKey, QDRANT_PORT: config.qdrantPort, GOOGLE_TOKEN_FILE: config.googleTokenFile, GOOGLE_CREDENTIALS_FILE: config.googleCredentialsFile, QDRANT_API_KEY: config.qdrantApiKey } })
