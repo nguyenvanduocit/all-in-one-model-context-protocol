@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.11.0...v1.12.0) (2025-02-03)
+
+
+### Features
+
+* add Deepseek tool and remove Gemini critical thinking tool ([9431744](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/94317447343a87bfd94e1cfcbb9bbcb02c646948))
+
 ## [1.11.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.10.0...v1.11.0) (2025-01-03)
 
 
