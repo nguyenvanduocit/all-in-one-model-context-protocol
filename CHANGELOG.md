@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.12.0...v1.13.0) (2025-02-03)
+
+
+### Features
+
+* Add tool usage planning functionality with Deepseek ([d41b20c](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/d41b20cd12fc033771181151e061eeb0ba07331c))
+
 ## [1.12.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.11.0...v1.12.0) (2025-02-03)
 
 
