@@ -146,6 +146,16 @@ Arguments:
 
 - `page_id` (String) (Required): Confluence page ID
 
+### deepseek_reasoning
+
+advanced reasoning engine using Deepseek's AI capabilities for multi-step problem solving, critical analysis, and strategic decision support
+
+Arguments:
+
+- `question` (String) (Required): The structured query or problem statement requiring deep analysis and reasoning
+- `context` (String) (Required): Defines the operational context and purpose of the query within the MCP ecosystem
+- `knowledge` (String): Provides relevant chat history, knowledge base entries, and structured data context for MCP-aware reasoning
+
 ### get_web_content
 
 Fetches content from a given HTTP/HTTPS URL. This tool allows you to retrieve text content from web pages, APIs, or any accessible HTTP endpoints. Returns the raw content as text.
@@ -157,15 +167,6 @@ Arguments:
 ### ai_web_search
 
 search the web by using Google AI Search. Best tool to update realtime information
-
-Arguments:
-
-- `question` (String) (Required): The question to ask. Should be a question
-- `context` (String) (Required): Context/purpose of the question, helps Gemini to understand the question better
-
-### ai_critical_thinking
-
-critical thinking tool
 
 Arguments:
 
@@ -447,13 +448,13 @@ Arguments:
 
 ### execute_comand_line_script
 
-Execute a script file on user machine. Non interactive. Do not do unsafe operations
+Safely execute command line scripts on the user's system with security restrictions. Features sandboxed execution, timeout protection, and output capture. Supports cross-platform scripting with automatic environment detection.
 
 Arguments:
 
 - `content` (String) (Required): 
-- `interpreter` (String) (Default: /bin/sh): Script interpreter (e.g., /bin/sh, /bin/bash, python, etc.)
-- `working_dir` (String): Working directory for script execution
+- `interpreter` (String) (Default: /bin/sh): Path to interpreter binary (e.g. /bin/sh, /bin/bash, /usr/bin/python, cmd.exe). Validated against allowed list for security
+- `working_dir` (String): Execution directory path (default: user home). Validated to prevent unauthorized access to system locations
 
 ### web_search
 
@@ -543,6 +544,15 @@ Arguments:
 - `action` (String) (Required): Action to perform: list, enable, disable
 - `tool_name` (String): Tool name to enable/disable
 
+### tool_use_plan
+
+Tạo kế hoạch sử dụng các công cụ đang kích hoạt để giải quyết yêu cầu
+
+Arguments:
+
+- `request` (String) (Required): Yêu cầu cần lập kế hoạch
+- `context` (String) (Required): Ngữ cảnh liên quan đến yêu cầu
+
 ### youtube_transcript
 
 Get YouTube video transcript
@@ -579,14 +589,4 @@ Arguments:
 
 - `channel_id` (String) (Required): ID of the channel to list videos for
 - `max_results` (Number) (Required): Maximum number of videos to return
-
-### deepseek_reasoning
-
-Advanced reasoning engine using Deepseek's AI capabilities for multi-step problem solving, critical analysis, and strategic decision support.
-
-Arguments:
-
-- `question` (String) (Required): The structured query or problem statement requiring deep analysis and reasoning
-- `context` (String) (Required): Defines the operational context and purpose of the query within the MCP ecosystem
-- `knowledge` (String): Provides relevant chat history, knowledge base entries, and structured data context for MCP-aware reasoning
 

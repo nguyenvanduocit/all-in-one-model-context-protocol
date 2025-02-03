@@ -50,18 +50,10 @@ func deepseekReasoningHandler(arguments map[string]interface{}) (*mcp.CallToolRe
 
 	chatContext, _ := arguments["chat_context"].(string)
 
-	systemPrompt := `You are an advanced reasoning engine powered by Deepseek. Your task is to:
-1. Break down complex problems into manageable components
-2. Apply systematic reasoning and logical analysis
-3. Consider multiple perspectives and potential implications
-4. Identify assumptions and potential biases
-5. Draw well-supported conclusions based on available information
-6. Provide clear explanations of your reasoning process
-
-Context for this analysis: ` + contextArgument
+	systemPrompt := "Context:\n" + contextArgument
 
 	if chatContext != "" {
-		systemPrompt += "\n\nAdditional Chat Context:\n" + chatContext
+		systemPrompt += "\n\nAdditional Context:\n" + chatContext
 	}
 
 	messages := []openai.ChatCompletionMessage{
