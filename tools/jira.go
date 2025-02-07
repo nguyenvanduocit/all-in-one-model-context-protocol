@@ -50,56 +50,64 @@ func RegisterJiraTool(s *server.MCPServer) {
 		mcp.WithString("issue_key", mcp.Required(), mcp.Description("The unique identifier of the issue to update (e.g., KP-2)")),
 		mcp.WithString("summary", mcp.Description("New title for the issue (optional)")),
 		mcp.WithString("description", mcp.Description("New description for the issue (optional)")),
-		mcp.WithString("status", mcp.Description("New status for the issue (must match available transitions, optional)")),
+	)
+
+	// Add status list tool
+	jiraStatusListTool := mcp.NewTool("jira_list_statuses",
+		mcp.WithDescription("Retrieve all available issue status IDs and their names for a specific Jira project"),
+		mcp.WithString("project_key", mcp.Required(), mcp.Description("Project identifier (e.g., KP, PROJ)")),
+	)
+
+	// Add new tool definition in RegisterJiraTool function
+	jiraTransitionTool := mcp.NewTool("jira_transition_issue",
+		mcp.WithDescription("Transition an issue through its workflow using a valid transition ID. Get available transitions from jira_get_issue"),
+		mcp.WithString("issue_key", mcp.Required(), mcp.Description("The issue to transition (e.g., KP-123)")),
+		mcp.WithString("transition_id", mcp.Required(), mcp.Description("Transition ID from available transitions list")),
+		mcp.WithString("comment", mcp.Description("Optional comment to add with transition")),
 	)
 
 	s.AddTool(jiraSearchTool, util.ErrorGuard(jiraSearchHandler))
 	s.AddTool(jiraListSprintTool, util.ErrorGuard(jiraListSprintHandler))
 	s.AddTool(jiraCreateIssueTool, util.ErrorGuard(jiraCreateIssueHandler))
 	s.AddTool(jiraUpdateIssueTool, util.ErrorGuard(jiraUpdateIssueHandler))
+	s.AddTool(jiraStatusListTool, util.ErrorGuard(jiraGetStatusesHandler))
+	s.AddTool(jiraTransitionTool, util.ErrorGuard(jiraTransitionIssueHandler))
 }
 
-
 func jiraUpdateIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
-    client := services.JiraClient()
+	client := services.JiraClient()
 
-    issueKey, ok := arguments["issue_key"].(string)
-    if !ok {
-        return nil, fmt.Errorf("issue_key argument is required")
-    }
+	issueKey, ok := arguments["issue_key"].(string)
+	if !ok {
+		return nil, fmt.Errorf("issue_key argument is required")
+	}
 
-    // Create update payload
-    payload := &models.IssueSchemeV2{
-        Fields: &models.IssueFieldsSchemeV2{},
-    }
+	// Create update payload
+	payload := &models.IssueSchemeV2{
+		Fields: &models.IssueFieldsSchemeV2{},
+	}
 
-    // Check and add optional fields if provided
-    if summary, ok := arguments["summary"].(string); ok && summary != "" {
-        payload.Fields.Summary = summary
-    }
+	// Check and add optional fields if provided
+	if summary, ok := arguments["summary"].(string); ok && summary != "" {
+		payload.Fields.Summary = summary
+	}
 
-    if description, ok := arguments["description"].(string); ok && description != "" {
-        payload.Fields.Description = description
-    }
+	if description, ok := arguments["description"].(string); ok && description != "" {
+		payload.Fields.Description = description
+	}
 
-    if status, ok := arguments["status"].(string); ok && status != "" {
-        payload.Fields.Status = &models.StatusScheme{
-            Name: status,
-        }
-    }
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
 
-    ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
-    defer cancel()
+	response, err := client.Issue.Update(ctx, issueKey, true, payload, nil, nil)
+	if err != nil {
+		if response != nil {
+			return nil, fmt.Errorf("failed to update issue: %s (endpoint: %s)", response.Bytes.String(), response.Endpoint)
+		}
+		return nil, fmt.Errorf("failed to update issue: %v", err)
+	}
 
-    response, err := client.Issue.Update(ctx, issueKey, true, payload, nil, nil)
-    if err != nil {
-        if response != nil {
-            return nil, fmt.Errorf("failed to update issue: %s (endpoint: %s)", response.Bytes.String(), response.Endpoint)
-        }
-        return nil, fmt.Errorf("failed to update issue: %v", err)
-    }
-
-    return mcp.NewToolResultText("Issue updated successfully!"), nil
+	return mcp.NewToolResultText("Issue updated successfully!"), nil
 }
 
 func jiraCreateIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
@@ -130,14 +138,13 @@ func jiraCreateIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResu
 
 	var payload = models.IssueSchemeV2{
 		Fields: &models.IssueFieldsSchemeV2{
-			Summary:   summary,
-			Project:   &models.ProjectScheme{Key: projectKey},
+			Summary:     summary,
+			Project:     &models.ProjectScheme{Key: projectKey},
 			Description: description,
-			IssueType: &models.IssueTypeScheme{Name: issueType},
+			IssueType:   &models.IssueTypeScheme{Name: issueType},
 		},
 	}
 
-	
 	issue, response, err := client.Issue.Create(ctx, &payload, nil)
 	if err != nil {
 		if response != nil {
@@ -151,38 +158,37 @@ func jiraCreateIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResu
 }
 
 func jiraListSprintHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	boardIDStr, ok := arguments["board_id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("board_id argument is required")
+	}
 
-    boardIDStr, ok := arguments["board_id"].(string)
-    if !ok {
-        return nil, fmt.Errorf("board_id argument is required")
-    }
+	boardID, err := strconv.Atoi(boardIDStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid board_id: %v", err)
+	}
 
-    boardID, err := strconv.Atoi(boardIDStr)
-    if err != nil {
-        return nil, fmt.Errorf("invalid board_id: %v", err)
-    }
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
 
-    ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
-    defer cancel()
+	sprints, response, err := services.AgileClient().Board.Sprints(ctx, boardID, 0, 50, []string{"active", "future"})
+	if err != nil {
+		if response != nil {
+			return nil, fmt.Errorf("failed to get sprints: %s (endpoint: %s)", response.Bytes.String(), response.Endpoint)
+		}
+		return nil, fmt.Errorf("failed to get sprints: %v", err)
+	}
 
-    sprints, response, err := services.AgileClient().Board.Sprints(ctx, boardID, 0, 50, []string{"active", "future"})
-    if err != nil {
-        if response != nil {
-            return nil, fmt.Errorf("failed to get sprints: %s (endpoint: %s)", response.Bytes.String(), response.Endpoint)
-        }
-        return nil, fmt.Errorf("failed to get sprints: %v", err)
-    }
+	if len(sprints.Values) == 0 {
+		return mcp.NewToolResultText("No sprints found for this board."), nil
+	}
 
-    if len(sprints.Values) == 0 {
-        return mcp.NewToolResultText("No sprints found for this board."), nil
-    }
+	var result string
+	for _, sprint := range sprints.Values {
+		result += fmt.Sprintf("ID: %d\nName: %s\nState: %s\nStartDate: %s\nEndDate: %s\n\n", sprint.ID, sprint.Name, sprint.State, sprint.StartDate, sprint.EndDate)
+	}
 
-    var result string
-    for _, sprint := range sprints.Values {
-        result += fmt.Sprintf("ID: %d\nName: %s\nState: %s\nStartDate: %s\nEndDate: %s\n\n", sprint.ID, sprint.Name, sprint.State, sprint.StartDate, sprint.EndDate)
-    }
-
-    return mcp.NewToolResultText(result), nil
+	return mcp.NewToolResultText(result), nil
 }
 
 func jiraSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
@@ -238,7 +244,7 @@ func jiraSearchHandler(arguments map[string]interface{}) (*mcp.CallToolResult, e
 		if issue.Fields.Priority != nil {
 			sb.WriteString(fmt.Sprintf("Priority: %s\n", issue.Fields.Priority.Name))
 		} else {
-			sb.WriteString("Priority: Unset\n") 
+			sb.WriteString("Priority: Unset\n")
 		}
 
 		if issue.Fields.Resolutiondate != "" {
@@ -293,7 +299,7 @@ func jiraIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResult, er
 	}
 
 	// Get assignee name, handling nil case
-	assigneeName := "Unassigned" 
+	assigneeName := "Unassigned"
 	if issue.Fields.Assignee != nil {
 		assigneeName = issue.Fields.Assignee.DisplayName
 	}
@@ -322,7 +328,7 @@ Available Transitions:
 		issue.Fields.Summary,
 		issue.Fields.Status.Name,
 		reporterName,
-		assigneeName, 
+		assigneeName,
 		issue.Fields.Created,
 		issue.Fields.Updated,
 		priorityName,
@@ -332,4 +338,76 @@ Available Transitions:
 	)
 
 	return mcp.NewToolResultText(result), nil
+}
+
+func jiraGetStatusesHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	client := services.JiraClient()
+
+	projectKey, ok := arguments["project_key"].(string)
+	if !ok {
+		return nil, fmt.Errorf("project_key argument is required")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	issueTypes, response, err := client.Project.Statuses(ctx, projectKey)
+	if err != nil {
+		if response != nil {
+			return nil, fmt.Errorf("failed to get statuses: %s (endpoint: %s)", response.Bytes.String(), response.Endpoint)
+		}
+		return nil, fmt.Errorf("failed to get statuses: %v", err)
+	}
+
+	if len(issueTypes) == 0 {
+		return mcp.NewToolResultText("No issue types found for this project."), nil
+	}
+
+	var result strings.Builder
+	result.WriteString("Available Statuses:\n")
+	for _, issueType := range issueTypes {
+		result.WriteString(fmt.Sprintf("\nIssue Type: %s\n", issueType.Name))
+		for _, status := range issueType.Statuses {
+			result.WriteString(fmt.Sprintf("  - %s: %s\n", status.Name, status.ID))
+		}
+	}
+
+	return mcp.NewToolResultText(result.String()), nil
+}
+
+func jiraTransitionIssueHandler(arguments map[string]interface{}) (*mcp.CallToolResult, error) {
+	client := services.JiraClient()
+
+	issueKey, ok := arguments["issue_key"].(string)
+	if !ok || issueKey == "" {
+		return nil, fmt.Errorf("valid issue_key is required")
+	}
+
+	transitionID, ok := arguments["transition_id"].(string)
+	if !ok || transitionID == "" {
+		return nil, fmt.Errorf("valid transition_id is required")
+	}
+
+	var options *models.IssueMoveOptionsV2
+	if comment, ok := arguments["comment"].(string); ok && comment != "" {
+		options = &models.IssueMoveOptionsV2{
+			Fields: &models.IssueSchemeV2{
+			},
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+	defer cancel()
+
+	response, err := client.Issue.Move(ctx, issueKey, transitionID, options)
+	if err != nil {
+		if response != nil {
+			return nil, fmt.Errorf("transition failed: %s (endpoint: %s)", 
+				response.Bytes.String(), 
+				response.Endpoint)
+		}
+		return nil, fmt.Errorf("transition failed: %v", err)
+	}
+
+	return mcp.NewToolResultText("Issue transition completed successfully"), nil
 }
