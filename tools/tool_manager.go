@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/services"
 	"github.com/nguyenvanduocit/all-in-one-model-context-protocol/util"
 	"github.com/sashabaranov/go-openai"
 )
@@ -193,7 +194,7 @@ Output format:
 	}
 
 	// Sử dụng client chung từ deepseek.go
-	resp, err := deepseekClient().CreateChatCompletion(
+	resp, err := services.DefaultDeepseekClient().CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
 			Model:       "deepseek-reasoner", // Sử dụng model R1
