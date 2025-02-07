@@ -71,7 +71,7 @@ func RegisterGitLabTool(s *server.MCPServer) {
 		mcp.WithDescription("Get file content from a GitLab repository"),
 		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 		mcp.WithString("file_path", mcp.Required(), mcp.Description("Path to the file in the repository")),
-		mcp.WithString("ref", mcp.DefaultString("develop"), mcp.Description("Branch name, tag, or commit SHA")),
+		mcp.WithString("ref", mcp.Required(), mcp.Description("Branch name, tag, or commit SHA")),
 	)
 
 	pipelineTool := mcp.NewTool("gitlab_list_pipelines",
@@ -84,8 +84,8 @@ func RegisterGitLabTool(s *server.MCPServer) {
 		mcp.WithDescription("List commits in a GitLab project within a date range"),
 		mcp.WithString("project_path", mcp.Required(), mcp.Description("Project/repo path")),
 		mcp.WithString("since", mcp.Required(), mcp.Description("Start date (YYYY-MM-DD)")),
-		mcp.WithString("until", mcp.Required(), mcp.Description("End date (YYYY-MM-DD)")),
-		mcp.WithString("ref", mcp.DefaultString("develop"), mcp.Description("Branch name, tag, or commit SHA")),
+		mcp.WithString("until", mcp.Description("End date (YYYY-MM-DD). If not provided, defaults to current date")),
+		mcp.WithString("ref", mcp.Required(), mcp.Description("Branch name, tag, or commit SHA")),
 	)
 
 	commitDetailsTool := mcp.NewTool("gitlab_get_commit_details",
@@ -98,7 +98,7 @@ func RegisterGitLabTool(s *server.MCPServer) {
 		mcp.WithDescription("List GitLab user events within a date range"),
 		mcp.WithString("username", mcp.Required(), mcp.Description("GitLab username")),
 		mcp.WithString("since", mcp.Required(), mcp.Description("Start date (YYYY-MM-DD)")),
-		mcp.WithString("until", mcp.Required(), mcp.Description("End date (YYYY-MM-DD)")),
+		mcp.WithString("until", mcp.Description("End date (YYYY-MM-DD). If not provided, defaults to current date")),
 	)
 
 	listGroupUsersTool := mcp.NewTool("gitlab_list_group_users",
@@ -433,9 +433,9 @@ func listCommitsHandler(arguments map[string]interface{}) (*mcp.CallToolResult, 
 		return nil, fmt.Errorf("missing required argument: since")
 	}
 
-	until, ok := arguments["until"].(string)
-	if !ok {
-		return nil, fmt.Errorf("missing required argument: until")
+	until := time.Now().Format("2006-01-02")
+	if value, ok := arguments["until"]; ok {
+		until = value.(string)
 	}
 
 	ref := "develop"
@@ -557,9 +557,9 @@ func listUserEventsHandler(arguments map[string]interface{}) (*mcp.CallToolResul
 		return nil, fmt.Errorf("missing required argument: since")
 	}
 
-	until, ok := arguments["until"].(string)
-	if !ok {
-		return nil, fmt.Errorf("missing required argument: until")
+	until := time.Now().Format("2006-01-02")
+	if value, ok := arguments["until"]; ok {
+		until = value.(string)
 	}
 
 	sinceTime, err := time.Parse("2006-01-02", since)
