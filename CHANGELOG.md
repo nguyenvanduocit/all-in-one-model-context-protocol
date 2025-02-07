@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.14.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.13.0...v1.14.0) (2025-02-07)
+
+
+### Features
+
+* add Google Chat integration with service and tool implementation ([4c260e5](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/4c260e565c9a5db89b8205dfc51f894205c892f0))
+* **confluence:** add page creation and update tools ([3bb956c](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/3bb956c26b242068c441a73b6a09c3880c04e9ca))
+* **jira:** add status management tools ([aaaf147](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/commit/aaaf14753a5508844f4e89fd01e68a48dff0f7b0))
+
 ## [1.13.0](https://github.com/nguyenvanduocit/all-in-one-model-context-protocol/compare/v1.12.0...v1.13.0) (2025-02-03)
 
 
