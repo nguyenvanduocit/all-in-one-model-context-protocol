@@ -91,6 +91,10 @@ func main() {
 		tools.RegisterSequentialThinkingTool(mcpServer)
 	}
 
+	if isEnabled("gchat") {
+		tools.RegisterGChatTool(mcpServer)
+	}
+
 	prompts.RegisterCodeTools(mcpServer)
 
 	resources.RegisterJiraResource(mcpServer)
