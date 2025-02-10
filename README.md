@@ -154,6 +154,28 @@ Arguments:
 
 - `page_id` (String) (Required): Confluence page ID
 
+### confluence_create_page
+
+Create a new Confluence page
+
+Arguments:
+
+- `space_key` (String) (Required): The key of the space where the page will be created
+- `title` (String) (Required): Title of the page
+- `content` (String) (Required): Content of the page in storage format (XHTML)
+- `parent_id` (String): ID of the parent page (optional)
+
+### confluence_update_page
+
+Update an existing Confluence page
+
+Arguments:
+
+- `page_id` (String) (Required): ID of the page to update
+- `title` (String): New title of the page (optional)
+- `content` (String): New content of the page in storage format (XHTML)
+- `version_number` (String): Version number for optimistic locking (optional)
+
 ### deepseek_reasoning
 
 advanced reasoning engine using Deepseek's AI capabilities for multi-step problem solving, critical analysis, and strategic decision support
@@ -171,6 +193,19 @@ Fetches content from a given HTTP/HTTPS URL. This tool allows you to retrieve te
 Arguments:
 
 - `url` (String) (Required): The complete HTTP/HTTPS URL to fetch content from (e.g., https://example.com)
+
+### gchat_list_spaces
+
+List all available Google Chat spaces/rooms
+
+### gchat_send_message
+
+Send a message to a Google Chat space or direct message
+
+Arguments:
+
+- `space_name` (String) (Required): Name of the space to send the message to
+- `message` (String) (Required): Text message to send
 
 ### ai_web_search
 
@@ -234,7 +269,7 @@ Arguments:
 
 - `project_path` (String) (Required): Project/repo path
 - `file_path` (String) (Required): Path to the file in the repository
-- `ref` (String) (Default: develop): Branch name, tag, or commit SHA
+- `ref` (String) (Required): Branch name, tag, or commit SHA
 
 ### gitlab_list_pipelines
 
@@ -253,8 +288,8 @@ Arguments:
 
 - `project_path` (String) (Required): Project/repo path
 - `since` (String) (Required): Start date (YYYY-MM-DD)
-- `until` (String) (Required): End date (YYYY-MM-DD)
-- `ref` (String) (Default: develop): Branch name, tag, or commit SHA
+- `until` (String): End date (YYYY-MM-DD). If not provided, defaults to current date
+- `ref` (String) (Required): Branch name, tag, or commit SHA
 
 ### gitlab_get_commit_details
 
@@ -273,7 +308,7 @@ Arguments:
 
 - `username` (String) (Required): GitLab username
 - `since` (String) (Required): Start date (YYYY-MM-DD)
-- `until` (String) (Required): End date (YYYY-MM-DD)
+- `until` (String): End date (YYYY-MM-DD). If not provided, defaults to current date
 
 ### gitlab_list_group_users
 
@@ -395,7 +430,24 @@ Arguments:
 - `issue_key` (String) (Required): The unique identifier of the issue to update (e.g., KP-2)
 - `summary` (String): New title for the issue (optional)
 - `description` (String): New description for the issue (optional)
-- `status` (String): New status for the issue (must match available transitions, optional)
+
+### jira_list_statuses
+
+Retrieve all available issue status IDs and their names for a specific Jira project
+
+Arguments:
+
+- `project_key` (String) (Required): Project identifier (e.g., KP, PROJ)
+
+### jira_transition_issue
+
+Transition an issue through its workflow using a valid transition ID. Get available transitions from jira_get_issue
+
+Arguments:
+
+- `issue_key` (String) (Required): The issue to transition (e.g., KP-123)
+- `transition_id` (String) (Required): Transition ID from available transitions list
+- `comment` (String): Optional comment to add with transition
 
 ### RAG_memory_index_content
 
