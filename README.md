@@ -67,6 +67,14 @@ QDRANT_API_KEY=
 }
 ```
 
+## Secret
+
+*GOOGLE_TOKEN_FILE* is using for Google AI like Gemini, Google Search, Google Calendar, etc.
+
+*GOOGLE_CREDENTIALS_FILE* is service account for advanced feature like Google Chat. You need to create project in Google Cloud Console and create service account. Then also need to create Google cloud bot chat for it. Ask any LLM model to create these for you.
+
+
+
 ## Enable Tools
 
 There are a hidden variable `ENABLE_TOOLS` in the environment variable. It is a comma separated list of tools group to enable. If not set, all tools will be enabled. Leave it empty to enable all tools.
