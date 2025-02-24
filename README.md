@@ -1,3 +1,13 @@
+# THE PROJECT IS MOVED
+
+THE PROJECT HAS BEEN SPLIT AND MOVED TO INDIVIDUAL REPOSITORIES.
+
+- [Google Kit](https://github.com/nguyenvanduocit/google-kit): Tools for Gmail, Google Calendar, Google Chat
+- [RAG Kit](https://github.com/nguyenvanduocit/rag-kit): Tools for RAG, Memory
+- [Dev Kit](https://github.com/nguyenvanduocit/dev-kit): Tools for developers, jira, confluence, gitlab, github, ...
+- [Fetch Kit](https://github.com/nguyenvanduocit/fetch-kit): Tools for fetch, scrape, ...
+- [Research Kit](https://github.com/nguyenvanduocit/research-kit): Tools for research, academic, reasoning, ...
+
 # MyMCP Server
 
 [![smithery badge](https://smithery.ai/badge/@nguyenvanduocit/all-in-one-model-context-protocol)](https://smithery.ai/server/@nguyenvanduocit/all-in-one-model-context-protocol)
